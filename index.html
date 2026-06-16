@@ -718,6 +718,59 @@
     border-radius: 20px;
     border: 1px solid rgba(61,142,240,0.2);
   }
+
+  /* ─── ANALYTICS ─── */
+  .kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:12px;margin-bottom:20px}
+  .kpi-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+  .kpi-icon{font-size:22px;margin-bottom:8px}
+  .kpi-value{font-family:var(--font-display);font-size:26px;font-weight:700;color:var(--accent2);line-height:1;margin-bottom:4px}
+  .kpi-label{font-size:12px;color:var(--text2)}
+  .chart-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:16px}
+  .chart-title{font-family:var(--font-display);font-size:14px;font-weight:600;margin-bottom:16px}
+  .bar-chart{display:flex;align-items:flex-end;gap:8px;height:140px;padding:0 4px}
+  .bar-col{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+  .bar-fill{width:100%;border-radius:6px 6px 0 0;background:var(--accent);min-height:4px;transition:height .5s}
+  .bar-fill.g{background:var(--green)}.bar-fill.a{background:var(--amber)}
+  .bar-label{font-size:9px;color:var(--text2);text-align:center;word-break:break-all}
+  .bar-val{font-size:10px;font-weight:600;color:var(--text2)}
+  .donut-wrap{position:relative;display:flex;justify-content:center}
+  .donut-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+  .donut-center-num{font-family:var(--font-display);font-size:22px;font-weight:700;color:var(--text)}
+  .donut-center-label{font-size:10px;color:var(--text2)}
+  .donut-legend{display:flex;flex-wrap:wrap;gap:8px;margin-top:12px}
+  .donut-legend-item{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--text2)}
+  .donut-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+  .tl-row{display:flex;align-items:center;gap:10px;margin-bottom:6px}
+  .tl-lbl{font-size:11px;color:var(--text2);width:60px;flex-shrink:0;text-align:right}
+  .tl-track{flex:1;background:var(--surface2);border-radius:4px;height:20px;overflow:hidden}
+  .tl-fill{height:100%;background:var(--accent);border-radius:4px;display:flex;align-items:center;padding-left:6px;transition:width .5s}
+  .tl-num{font-size:10px;font-weight:600;color:white}
+  .fsi{padding:12px 0;border-bottom:1px solid var(--border)}
+  .fsi:last-child{border-bottom:none}
+  .fsi-hd{display:flex;justify-content:space-between;margin-bottom:8px}
+  .fsi-name{font-size:13px;font-weight:500}
+  .fsi-type{font-size:11px;color:var(--text3);background:var(--surface2);padding:2px 8px;border-radius:10px}
+  .ans-bar{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;font-size:12px}
+  .ans-lbl{color:var(--text2);flex:1}
+  .ans-track{flex:2;background:var(--surface2);border-radius:3px;height:8px;margin:0 8px;overflow:hidden}
+  .ans-fill{height:100%;background:var(--accent);border-radius:3px}
+  .ans-pct{color:var(--accent2);font-weight:600;width:36px;text-align:right}
+  .rpt-card{background:linear-gradient(135deg,rgba(61,142,240,.1),rgba(30,47,80,.6));border:1px solid rgba(61,142,240,.25);border-radius:var(--radius);padding:20px;margin-bottom:16px}
+  .rpt-hd{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+  .rpt-icon{font-size:28px}
+  .rpt-title{font-family:var(--font-display);font-size:15px;font-weight:600}
+  .rpt-sub{font-size:12px;color:var(--text2);margin-top:2px}
+  .rpt-actions{display:flex;gap:8px}
+  .kp-card{background:rgba(34,197,94,.06);border:1px solid rgba(34,197,94,.2);border-radius:var(--radius);padding:16px;margin-bottom:16px}
+  .kp-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .kp-title{font-size:14px;font-weight:600;color:var(--green)}
+  .ka-item{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:8px;display:flex;align-items:center;justify-content:space-between}
+  .ka-name{font-size:13px;font-weight:500}
+  .ka-meta{font-size:11px;color:var(--text2);margin-top:2px}
+  .ka-btn{background:var(--accent);color:white;border:none;border-radius:6px;padding:6px 12px;font-size:12px;cursor:pointer;font-family:var(--font-body)}
+  .ka-btn.done{background:var(--green-dim);color:var(--green)}
+  .form-selector{background:var(--surface2);border:1px solid var(--border);border-radius:var(--radius-sm);padding:10px 14px;color:var(--text);font-size:14px;font-family:var(--font-body);outline:none;width:100%;cursor:pointer;margin-bottom:20px}
+
   ::-webkit-scrollbar { width: 4px; }
   ::-webkit-scrollbar-track { background: transparent; }
   ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 2px; }
@@ -895,6 +948,63 @@
   </div>
 </div>
 
+<!-- ANALYTICS PAGE -->
+<div class="page" id="page-analytics">
+  <select class="form-selector" id="analytics-form-select" onchange="renderAnalytics()">
+    <option value="all">Tous les formulaires</option>
+  </select>
+  <div class="kpi-grid">
+    <div class="kpi-card"><div class="kpi-icon">📝</div><div class="kpi-value" id="kpi-total">0</div><div class="kpi-label">Réponses</div></div>
+    <div class="kpi-card"><div class="kpi-icon">✅</div><div class="kpi-value" id="kpi-synced">0</div><div class="kpi-label">Synchronisées</div></div>
+    <div class="kpi-card"><div class="kpi-icon">📋</div><div class="kpi-value" id="kpi-forms">0</div><div class="kpi-label">Formulaires</div></div>
+    <div class="kpi-card"><div class="kpi-icon">📍</div><div class="kpi-value" id="kpi-gps">0</div><div class="kpi-label">Avec GPS</div></div>
+  </div>
+  <div class="chart-card">
+    <div class="chart-title">📅 Collectes — 7 derniers jours</div>
+    <div id="chart-timeline"></div>
+  </div>
+  <div class="chart-card" id="chart-form-wrap">
+    <div class="chart-title">📋 Réponses par formulaire</div>
+    <div class="bar-chart" id="chart-by-form"></div>
+  </div>
+  <div class="chart-card">
+    <div class="chart-title">🔄 Synchronisation</div>
+    <div class="donut-wrap">
+      <svg id="donut-svg" width="140" height="140" viewBox="0 0 140 140"></svg>
+      <div class="donut-center"><div class="donut-center-num" id="donut-pct">—</div><div class="donut-center-label">sync</div></div>
+    </div>
+    <div class="donut-legend" id="donut-legend"></div>
+  </div>
+  <div class="chart-card">
+    <div class="chart-title">📊 Analyse par champ</div>
+    <div id="field-stats-content"><div class="text-muted" style="text-align:center;padding:20px;">Sélectionnez un formulaire</div></div>
+  </div>
+  <div class="kp-card" id="kobo-pull-section" style="display:none">
+    <div class="kp-hd">
+      <div class="kp-title">🔗 Projets KoboToolbox</div>
+      <button class="btn btn-sm btn-secondary" onclick="pullKoboAssets(this)">🔄 Actualiser</button>
+    </div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:10px">Importez formulaires et réponses depuis votre compte Kobo.</div>
+    <div id="kobo-assets-list"><div class="text-muted" style="font-size:12px">Cliquez Actualiser pour voir vos projets</div></div>
+  </div>
+  <div class="section-title" style="margin-top:4px">📄 Exports &amp; Rapports</div>
+  <div class="rpt-card">
+    <div class="rpt-hd"><div class="rpt-icon">📊</div><div><div class="rpt-title">Rapport CSV</div><div class="rpt-sub">Toutes les réponses</div></div></div>
+    <div class="rpt-actions">
+      <button class="btn btn-secondary btn-sm" style="flex:1" onclick="exportReportCSV()">📥 CSV</button>
+      <button class="btn btn-primary btn-sm" style="flex:1" onclick="exportReportJSON()">📦 JSON</button>
+    </div>
+  </div>
+  <div class="rpt-card">
+    <div class="rpt-hd"><div class="rpt-icon">🗺️</div><div><div class="rpt-title">Export GPS</div><div class="rpt-sub">GeoJSON — compatible QGIS / Google Maps</div></div></div>
+    <div class="rpt-actions"><button class="btn btn-secondary btn-sm btn-full" onclick="exportGeoJSON()">🌍 GeoJSON</button></div>
+  </div>
+  <div class="rpt-card">
+    <div class="rpt-hd"><div class="rpt-icon">📤</div><div><div class="rpt-title">Push KoboToolbox</div><div class="rpt-sub" id="kobo-push-status">Configurez KoboToolbox dans Paramètres</div></div></div>
+    <div class="rpt-actions"><button class="btn btn-secondary btn-sm btn-full" onclick="pushToKobo()" id="kobo-push-btn">🚀 Envoyer vers Kobo</button></div>
+  </div>
+</div>
+
 <!-- BOTTOM NAV -->
 <nav class="bottom-nav">
   <button class="nav-item active" onclick="showPage('home')" id="nav-home">
@@ -920,6 +1030,12 @@
       <span class="nav-badge" id="responses-badge" style="display:none">0</span>
     </div>
     Réponses
+  </button>
+  <button class="nav-item" onclick="showPage('analytics')" id="nav-analytics">
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/>
+    </svg>
+    Analyses
   </button>
   <button class="nav-item" onclick="showPage('settings')" id="nav-settings">
     <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -1085,6 +1201,7 @@ function showPage(page) {
   if (page === 'home') renderHome();
   if (page === 'forms') renderForms();
   if (page === 'responses') renderResponses();
+  if (page === 'analytics') renderAnalytics();
   updateBadges();
 }
 
@@ -2145,6 +2262,409 @@ function buildKoboSubmission(form, resp) {
   });
   return data;
 }
+
+
+// ============================================================
+// ANALYTICS — Phase 4
+// ============================================================
+
+function getKoboConfig() {
+  try { return JSON.parse(localStorage.getItem('fs_kobo') || 'null'); } catch(e) { return null; }
+}
+
+function renderAnalytics() {
+  var sel = document.getElementById('analytics-form-select');
+  var prev = sel.value;
+  sel.innerHTML = '<option value="all">Tous les formulaires</option>';
+  forms.forEach(function(f) {
+    var o = document.createElement('option');
+    o.value = f.id;
+    o.textContent = f.title;
+    sel.appendChild(o);
+  });
+  if (prev) sel.value = prev;
+
+  var fid = sel.value;
+  var tF = fid === 'all' ? forms : forms.filter(function(f) { return f.id === fid; });
+  var tR = fid === 'all' ? responses : responses.filter(function(r) { return r.formId === fid; });
+
+  var synced = tR.filter(function(r) { return r.status === 'synced'; }).length;
+  var gps = tR.filter(function(r) {
+    var vals = Object.values(r.answers || {});
+    return vals.some(function(v) {
+      return typeof v === 'string' && v.indexOf(',') > -1 && !isNaN(parseFloat(v.split(',')[0]));
+    });
+  }).length;
+
+  document.getElementById('kpi-total').textContent = tR.length;
+  document.getElementById('kpi-synced').textContent = synced;
+  document.getElementById('kpi-forms').textContent = forms.length;
+  document.getElementById('kpi-gps').textContent = gps;
+
+  renderTimeline(tR);
+  renderBarChart();
+  renderDonut(tR);
+
+  if (fid !== 'all' && tF.length > 0) {
+    renderFieldStats(tF[0], tR);
+  } else if (fid === 'all' && forms.length === 1) {
+    renderFieldStats(forms[0], responses.filter(function(r) { return r.formId === forms[0].id; }));
+  } else {
+    document.getElementById('field-stats-content').innerHTML = '<div class="text-muted" style="text-align:center;padding:20px;">S\u00e9lectionnez un formulaire pour l\'analyse d\u00e9taill\u00e9e</div>';
+  }
+
+  var kobo = getKoboConfig();
+  if (kobo && kobo.token) {
+    document.getElementById('kobo-pull-section').style.display = 'block';
+    document.getElementById('kobo-push-status').textContent = 'Connect\u00e9 \u2014 envoi disponible';
+  } else {
+    document.getElementById('kobo-pull-section').style.display = 'none';
+    document.getElementById('kobo-push-status').textContent = 'Configurez KoboToolbox dans Param\u00e8tres';
+  }
+}
+
+function renderTimeline(tR) {
+  var days = [];
+  for (var i = 6; i >= 0; i--) {
+    var d = new Date();
+    d.setDate(d.getDate() - i);
+    var key = d.toISOString().slice(0, 10);
+    var label = i === 0 ? 'Auj.' : i === 1 ? 'Hier' : d.toLocaleDateString('fr-FR', {weekday: 'short'});
+    var count = tR.filter(function(r) { return r.createdAt && r.createdAt.slice(0, 10) === key; }).length;
+    days.push({label: label, count: count});
+  }
+  var max = Math.max.apply(null, days.map(function(d) { return d.count; }).concat([1]));
+  var html = '';
+  days.forEach(function(day) {
+    var w = day.count > 0 ? Math.max(day.count / max * 100, 4) : 0;
+    html += '<div class="tl-row">';
+    html += '<div class="tl-lbl">' + day.label + '</div>';
+    html += '<div class="tl-track"><div class="tl-fill" style="width:' + w + '%">';
+    if (day.count > 0) html += '<span class="tl-num">' + day.count + '</span>';
+    html += '</div></div></div>';
+  });
+  document.getElementById('chart-timeline').innerHTML = html;
+}
+
+function renderBarChart() {
+  var wrap = document.getElementById('chart-form-wrap');
+  if (forms.length === 0) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  var colors = ['', 'g', 'a', '', 'g', 'a'];
+  var counts = forms.map(function(f) { return responses.filter(function(r) { return r.formId === f.id; }).length; });
+  var maxC = Math.max.apply(null, counts.concat([1]));
+  var html = '';
+  forms.slice(0, 6).forEach(function(f, i) {
+    var c = responses.filter(function(r) { return r.formId === f.id; }).length;
+    var h = c > 0 ? Math.max(c / maxC * 110, 8) : 4;
+    var lbl = f.title.length > 10 ? f.title.slice(0, 10) + '\u2026' : f.title;
+    html += '<div class="bar-col">';
+    html += '<div class="bar-val">' + c + '</div>';
+    html += '<div class="bar-fill ' + colors[i % colors.length] + '" style="height:' + h + 'px"></div>';
+    html += '<div class="bar-label">' + lbl + '</div>';
+    html += '</div>';
+  });
+  document.getElementById('chart-by-form').innerHTML = html;
+}
+
+function renderDonut(tR) {
+  var svg = document.getElementById('donut-svg');
+  var legend = document.getElementById('donut-legend');
+  var total = tR.length;
+  var synced = tR.filter(function(r) { return r.status === 'synced'; }).length;
+  var pending = total - synced;
+  var pct = total ? Math.round(synced / total * 100) : 0;
+  document.getElementById('donut-pct').textContent = pct + '%';
+
+  if (total === 0) {
+    svg.innerHTML = '<circle cx="70" cy="70" r="50" fill="none" stroke="#1E2F50" stroke-width="18"/>';
+    legend.innerHTML = '<div class="donut-legend-item"><div class="donut-dot" style="background:#1E2F50"></div>Aucune donn\u00e9e</div>';
+    return;
+  }
+  var r = 50, cx = 70, cy = 70, sw = 18, circ = 2 * Math.PI * r;
+  var segs = [
+    {val: synced, color: '#22C55E', label: 'Synchronis\u00e9'},
+    {val: pending, color: '#F59E0B', label: 'En attente'}
+  ];
+  var offset = -circ / 4;
+  var paths = '<circle cx="70" cy="70" r="50" fill="none" stroke="#1E2F50" stroke-width="18"/>';
+  segs.forEach(function(s) {
+    var dash = (s.val / total) * circ;
+    if (s.val > 0) {
+      paths += '<circle cx="' + cx + '" cy="' + cy + '" r="' + r + '" fill="none" stroke="' + s.color + '" stroke-width="' + sw + '" stroke-dasharray="' + dash + ' ' + (circ - dash) + '" stroke-dashoffset="' + (-offset) + '" stroke-linecap="round"/>';
+    }
+    offset += dash;
+  });
+  svg.innerHTML = paths;
+  legend.innerHTML = segs.map(function(s) {
+    return '<div class="donut-legend-item"><div class="donut-dot" style="background:' + s.color + '"></div>' + s.label + ': ' + s.val + '</div>';
+  }).join('');
+}
+
+function renderFieldStats(form, fR) {
+  var el = document.getElementById('field-stats-content');
+  if (fR.length === 0) {
+    el.innerHTML = '<div class="text-muted" style="text-align:center;padding:20px;">Aucune r\u00e9ponse pour ce formulaire</div>';
+    return;
+  }
+  var typeLabels = {text: 'Texte', number: 'Nombre', choice: 'Choix', date: 'Date', location: 'GPS', photo: 'Photo'};
+  var html = '';
+  form.fields.forEach(function(field) {
+    var answers = fR.map(function(r) { return r.answers[field.id]; }).filter(function(a) { return a !== undefined && a !== ''; });
+    var fillRate = Math.round(answers.length / fR.length * 100);
+    var fillColor = fillRate > 70 ? 'var(--green)' : fillRate > 40 ? 'var(--amber)' : 'var(--red)';
+    var detail = '';
+
+    if (field.type === 'choice' && field.choices) {
+      var counts = {};
+      field.choices.forEach(function(c) { counts[c] = 0; });
+      answers.forEach(function(a) { if (counts[a] !== undefined) counts[a]++; });
+      var maxC = Math.max.apply(null, Object.values(counts).concat([1]));
+      Object.keys(counts).forEach(function(k) {
+        var v = counts[k];
+        var pct2 = answers.length ? Math.round(v / answers.length * 100) : 0;
+        detail += '<div class="ans-bar">';
+        detail += '<div class="ans-lbl">' + k + '</div>';
+        detail += '<div class="ans-track"><div class="ans-fill" style="width:' + Math.round(v / maxC * 100) + '%"></div></div>';
+        detail += '<div class="ans-pct">' + pct2 + '%</div>';
+        detail += '</div>';
+      });
+    } else if (field.type === 'number') {
+      var nums = answers.map(Number).filter(function(n) { return !isNaN(n); });
+      if (nums.length > 0) {
+        var avg = (nums.reduce(function(a, b) { return a + b; }, 0) / nums.length).toFixed(1);
+        detail = '<div style="display:flex;gap:12px;font-size:12px;color:var(--text2);margin-top:6px">';
+        detail += '<span>Moy: <strong style="color:var(--accent2)">' + avg + '</strong></span>';
+        detail += '<span>Min: <strong>' + Math.min.apply(null, nums) + '</strong></span>';
+        detail += '<span>Max: <strong>' + Math.max.apply(null, nums) + '</strong></span>';
+        detail += '</div>';
+      }
+    } else if (field.type === 'location') {
+      detail = '<div style="font-size:12px;color:var(--green);margin-top:6px">\ud83d\udccd ' + answers.length + ' point(s) GPS</div>';
+    } else if (field.type === 'photo') {
+      detail = '<div style="font-size:12px;color:var(--accent2);margin-top:6px">\ud83d\udcf7 ' + answers.length + ' photo(s)</div>';
+    } else {
+      var sample = answers.slice(0, 3).join(' \u00b7 ');
+      if (sample) detail = '<div style="font-size:11px;color:var(--text2);margin-top:6px">Ex: ' + (sample.length > 80 ? sample.slice(0, 80) + '\u2026' : sample) + '</div>';
+    }
+
+    html += '<div class="fsi">';
+    html += '<div class="fsi-hd"><div class="fsi-name">' + field.label + '</div><div class="fsi-type">' + (typeLabels[field.type] || field.type) + '</div></div>';
+    html += '<div class="ans-bar" style="margin-bottom:6px">';
+    html += '<div class="ans-lbl" style="font-size:11px;color:var(--text3)">Remplissage</div>';
+    html += '<div class="ans-track"><div class="ans-fill" style="width:' + fillRate + '%;background:' + fillColor + '"></div></div>';
+    html += '<div class="ans-pct" style="color:' + fillColor + '">' + fillRate + '%</div>';
+    html += '</div>';
+    html += detail;
+    html += '</div>';
+  });
+  el.innerHTML = html;
+}
+
+// ── KOBO PULL (récupérer depuis KoboToolbox) ──
+function pullKoboAssets(btn) {
+  var kobo = getKoboConfig();
+  if (!kobo || !kobo.token) { showToast('Configurez KoboToolbox dans Param\u00e8tres', 'error'); return; }
+  var orig = btn.textContent;
+  btn.textContent = '\u23f3...';
+  btn.disabled = true;
+  var list = document.getElementById('kobo-assets-list');
+  list.innerHTML = '<div class="text-muted" style="font-size:12px">Chargement...</div>';
+
+  fetch(kobo.server + '/api/v2/assets/?format=json&asset_type=survey', {
+    headers: {'Authorization': 'Token ' + kobo.token}
+  })
+  .then(function(res) {
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    return res.json();
+  })
+  .then(function(data) {
+    var assets = data.results || [];
+    if (assets.length === 0) {
+      list.innerHTML = '<div class="text-muted" style="font-size:12px">Aucun formulaire trouv\u00e9</div>';
+      return;
+    }
+    var html = '';
+    assets.forEach(function(a) {
+      var imported = forms.some(function(f) { return f.koboUid === a.uid; });
+      var safeName = (a.name || 'Formulaire').replace(/"/g, '&quot;');
+      html += '<div class="ka-item">';
+      html += '<div><div class="ka-name">' + (a.name || 'Sans titre') + '</div>';
+      html += '<div class="ka-meta">' + (a.deployment__submission_count || 0) + ' soumissions</div></div>';
+      html += '<button class="ka-btn' + (imported ? ' done' : '') + '" ';
+      html += 'onclick="importKoboAsset(\'' + a.uid + '\', this)" ';
+      html += 'data-name="' + safeName + '" ';
+      html += (imported ? 'disabled' : '') + '>';
+      html += (imported ? '\u2705 Import\u00e9' : 'Importer');
+      html += '</button></div>';
+    });
+    list.innerHTML = html;
+    showToast('\u2705 ' + assets.length + ' projet(s) trouv\u00e9(s)', 'success');
+  })
+  .catch(function(e) {
+    list.innerHTML = '<div style="color:var(--red);font-size:12px">\u274c ' + e.message + '</div>';
+    showToast('Erreur KoboToolbox', 'error');
+  })
+  .finally(function() { btn.textContent = orig; btn.disabled = false; });
+}
+
+function importKoboAsset(uid, btn) {
+  var kobo = getKoboConfig();
+  if (!kobo || !kobo.token) return;
+  var name = btn.getAttribute('data-name') || 'Formulaire';
+  btn.textContent = '\u23f3';
+  btn.disabled = true;
+
+  fetch(kobo.server + '/api/v2/assets/' + uid + '/?format=json', {
+    headers: {'Authorization': 'Token ' + kobo.token}
+  })
+  .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
+  .then(function(detail) {
+    var fields = parseKoboSurvey(detail.content);
+    if (fields.length === 0) { showToast('Formulaire incompatible', 'error'); btn.textContent = 'Importer'; btn.disabled = false; return; }
+    var newForm = {
+      id: 'kobo_' + uid, koboUid: uid, title: name,
+      description: 'Import\u00e9 depuis KoboToolbox',
+      fields: fields,
+      createdAt: detail.date_created || new Date().toISOString(),
+      fromKobo: true
+    };
+    forms = forms.filter(function(f) { return f.id !== newForm.id; });
+    forms.push(newForm);
+
+    return fetch(kobo.server + '/api/v2/assets/' + uid + '/submissions/?format=json', {
+      headers: {'Authorization': 'Token ' + kobo.token}
+    })
+    .then(function(r2) { return r2.ok ? r2.json() : {results: []}; })
+    .then(function(sd) {
+      (sd.results || []).forEach(function(s) {
+        var ans = {};
+        fields.forEach(function(fi) { if (fi.koboName && s[fi.koboName] !== undefined) ans[fi.id] = s[fi.koboName]; });
+        var sub = {
+          id: 'kobo_sub_' + (s._id || Date.now()),
+          formId: 'kobo_' + uid, answers: ans,
+          createdAt: s._submission_time || new Date().toISOString(),
+          status: 'synced', fromKobo: true
+        };
+        if (!responses.find(function(r) { return r.id === sub.id; })) responses.push(sub);
+      });
+      saveToStorage();
+      btn.textContent = '\u2705 Import\u00e9';
+      btn.classList.add('done');
+      showToast('\u2705 ' + name + ' import\u00e9', 'success');
+      renderAnalytics();
+      updateBadges();
+    });
+  })
+  .catch(function(e) { showToast('Erreur: ' + e.message, 'error'); btn.textContent = 'Importer'; btn.disabled = false; });
+}
+
+// ── EXPORTS ──
+function exportReportCSV() {
+  var fid = document.getElementById('analytics-form-select').value;
+  var tF = fid === 'all' ? forms : forms.filter(function(f) { return f.id === fid; });
+  var tR = fid === 'all' ? responses : responses.filter(function(r) { return r.formId === fid; });
+  if (tR.length === 0) { showToast('Aucune r\u00e9ponse', 'error'); return; }
+  var allLabels = [];
+  tF.forEach(function(f) {
+    f.fields.forEach(function(fi) { if (allLabels.indexOf(fi.label) === -1) allLabels.push(fi.label); });
+  });
+  var header = ['Formulaire', 'Date', 'Statut'].concat(allLabels);
+  var rows = [header];
+  tR.forEach(function(r) {
+    var form = tF.find(function(f) { return f.id === r.formId; });
+    if (!form) return;
+    var row = [form.title, r.createdAt ? new Date(r.createdAt).toLocaleString('fr-FR') : '', r.status];
+    allLabels.forEach(function(lbl) {
+      var fi = form.fields.find(function(x) { return x.label === lbl; });
+      row.push(fi ? (r.answers[fi.id] || '') : '');
+    });
+    rows.push(row);
+  });
+  var csv = '\uFEFF' + rows.map(function(row) {
+    return row.map(function(c) { return '"' + String(c).replace(/"/g, '""') + '"'; }).join(',');
+  }).join('\n');
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], {type: 'text/csv;charset=utf-8;'}));
+  a.download = 'kolecta_' + new Date().toISOString().slice(0, 10) + '.csv';
+  a.click();
+  showToast('\u2705 CSV export\u00e9', 'success');
+}
+
+function exportReportJSON() {
+  var fid = document.getElementById('analytics-form-select').value;
+  var data = {
+    exported: new Date().toISOString(),
+    forms: fid === 'all' ? forms : forms.filter(function(f) { return f.id === fid; }),
+    responses: fid === 'all' ? responses : responses.filter(function(r) { return r.formId === fid; })
+  };
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'}));
+  a.download = 'kolecta_export_' + new Date().toISOString().slice(0, 10) + '.json';
+  a.click();
+  showToast('\u2705 JSON export\u00e9', 'success');
+}
+
+function exportGeoJSON() {
+  var features = [];
+  responses.forEach(function(r) {
+    var form = forms.find(function(f) { return f.id === r.formId; });
+    if (!form) return;
+    form.fields.filter(function(f) { return f.type === 'location'; }).forEach(function(f) {
+      var v = r.answers[f.id];
+      if (!v || v.indexOf(',') === -1) return;
+      var parts = v.split(',');
+      var lat = parseFloat(parts[0]), lng = parseFloat(parts[1]);
+      if (!isNaN(lat) && !isNaN(lng)) {
+        features.push({
+          type: 'Feature',
+          geometry: {type: 'Point', coordinates: [lng, lat]},
+          properties: {form: form.title, field: f.label, date: r.createdAt, status: r.status}
+        });
+      }
+    });
+  });
+  if (features.length === 0) { showToast('Aucun point GPS', 'error'); return; }
+  var a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify({type: 'FeatureCollection', features: features}, null, 2)], {type: 'application/json'}));
+  a.download = 'kolecta_gps_' + new Date().toISOString().slice(0, 10) + '.geojson';
+  a.click();
+  showToast('\u2705 GeoJSON \u00b7 ' + features.length + ' point(s)', 'success');
+}
+
+function pushToKobo() {
+  var kobo = getKoboConfig();
+  if (!kobo || !kobo.token) { showToast('Configurez KoboToolbox dans Param\u00e8tres', 'error'); return; }
+  var btn = document.getElementById('kobo-push-btn');
+  btn.textContent = '\u23f3...';
+  btn.disabled = true;
+  var pending = responses.filter(function(r) { return r.status === 'pending' && r.formId.indexOf('kobo_') === 0; });
+  var promises = pending.map(function(resp) {
+    var form = forms.find(function(f) { return f.id === resp.formId; });
+    if (!form || !form.koboUid) return Promise.resolve(false);
+    var sub = buildKoboSubmission(form, resp);
+    return fetch(kobo.server + '/api/v2/assets/' + form.koboUid + '/submissions/', {
+      method: 'POST',
+      headers: {'Authorization': 'Token ' + kobo.token, 'Content-Type': 'application/json'},
+      body: JSON.stringify(sub)
+    })
+    .then(function(r) {
+      if (r.ok) { resp.status = 'synced'; resp.syncedAt = new Date().toISOString(); return true; }
+      return false;
+    })
+    .catch(function() { return false; });
+  });
+  Promise.all(promises).then(function(results) {
+    var pushed = results.filter(Boolean).length;
+    saveToStorage();
+    updateBadges();
+    renderAnalytics();
+    btn.textContent = '\ud83d\ude80 Envoyer vers Kobo';
+    btn.disabled = false;
+    showToast(pushed > 0 ? '\u2705 ' + pushed + ' r\u00e9ponse(s) envoy\u00e9e(s)' : '\u2705 Tout est sync', 'success');
+  });
+}
+
 
 // Auto-sync when coming back online
 window.addEventListener('online', () => {
