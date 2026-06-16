@@ -1,0 +1,2292 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#0A1628">
+<meta name="apple-mobile-web-app-title" content="Kolecta">
+<meta name="mobile-web-app-capable" content="yes">
+<title>Kolecta — Collecte Terrain</title>
+<link rel="manifest" id="pwa-manifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  :root {
+    --bg: #0A1628;
+    --surface: #111E35;
+    --surface2: #172440;
+    --surface3: #1E2F50;
+    --accent: #3D8EF0;
+    --accent2: #5BA3FF;
+    --green: #22C55E;
+    --green-dim: #166534;
+    --amber: #F59E0B;
+    --red: #EF4444;
+    --text: #F0F4FF;
+    --text2: #8B9EC7;
+    --text3: #4A5F8A;
+    --border: #1E2F50;
+    --radius: 12px;
+    --radius-sm: 8px;
+    --font-display: 'Space Grotesk', sans-serif;
+    --font-body: 'Inter', sans-serif;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--font-body);
+    min-height: 100vh;
+    max-width: 480px;
+    margin: 0 auto;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* HEADER */
+  .header {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 16px 20px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .header-logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .logo-icon {
+    width: 36px;
+    height: 36px;
+    background: var(--accent);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+  }
+  .logo-text {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--text);
+    letter-spacing: -0.5px;
+  }
+  .logo-text span { color: var(--accent2); }
+  .header-status {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--text2);
+    background: var(--surface2);
+    padding: 6px 12px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+  }
+  .status-dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--green);
+    animation: pulse 2s infinite;
+  }
+  .status-dot.offline { background: var(--red); animation: none; }
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.4; }
+  }
+
+  /* BOTTOM NAV */
+  .bottom-nav {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 480px;
+    background: var(--surface);
+    border-top: 1px solid var(--border);
+    display: flex;
+    padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+    z-index: 100;
+  }
+  .nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 6px;
+    cursor: pointer;
+    border: none;
+    background: none;
+    color: var(--text3);
+    transition: color 0.2s;
+    font-size: 10px;
+    font-family: var(--font-body);
+  }
+  .nav-item.active { color: var(--accent2); }
+  .nav-item svg { width: 22px; height: 22px; }
+  .nav-badge {
+    position: absolute;
+    top: -2px;
+    right: -6px;
+    background: var(--accent);
+    color: white;
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 5px;
+    border-radius: 10px;
+    min-width: 16px;
+    text-align: center;
+  }
+  .nav-icon-wrap { position: relative; }
+
+  /* PAGES */
+  .page { display: none; padding: 20px; padding-bottom: 90px; }
+  .page.active { display: block; }
+
+  /* HOME PAGE */
+  .welcome-card {
+    background: linear-gradient(135deg, var(--accent) 0%, #1E5FBF 100%);
+    border-radius: 16px;
+    padding: 24px;
+    margin-bottom: 24px;
+    position: relative;
+    overflow: hidden;
+  }
+  .welcome-card::before {
+    content: '';
+    position: absolute;
+    top: -40px; right: -40px;
+    width: 160px; height: 160px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.07);
+  }
+  .welcome-card::after {
+    content: '';
+    position: absolute;
+    bottom: -20px; left: -20px;
+    width: 100px; height: 100px;
+    border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+  }
+  .welcome-title {
+    font-family: var(--font-display);
+    font-size: 22px;
+    font-weight: 700;
+    margin-bottom: 8px;
+    position: relative;
+    z-index: 1;
+  }
+  .welcome-sub {
+    font-size: 14px;
+    opacity: 0.85;
+    position: relative;
+    z-index: 1;
+    line-height: 1.5;
+  }
+
+  .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 24px;
+  }
+  .stat-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 12px;
+    text-align: center;
+  }
+  .stat-num {
+    font-family: var(--font-display);
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--accent2);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .stat-label { font-size: 11px; color: var(--text2); }
+
+  .section-title {
+    font-family: var(--font-display);
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .see-all { font-size: 13px; color: var(--accent2); font-weight: 500; cursor: pointer; font-family: var(--font-body); }
+
+  .activity-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px 16px;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .activity-icon {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+  .activity-icon.blue { background: rgba(61,142,240,0.15); }
+  .activity-icon.green { background: rgba(34,197,94,0.15); }
+  .activity-icon.amber { background: rgba(245,158,11,0.15); }
+  .activity-text { flex: 1; }
+  .activity-name { font-size: 14px; font-weight: 500; margin-bottom: 3px; }
+  .activity-meta { font-size: 12px; color: var(--text2); }
+  .activity-time { font-size: 11px; color: var(--text3); }
+
+  /* FORMS LIST PAGE */
+  .search-bar {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+  .search-bar input {
+    flex: 1;
+    background: none;
+    border: none;
+    outline: none;
+    color: var(--text);
+    font-size: 15px;
+    font-family: var(--font-body);
+  }
+  .search-bar input::placeholder { color: var(--text3); }
+
+  .form-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: border-color 0.2s, transform 0.1s;
+    position: relative;
+  }
+  .form-card:active { transform: scale(0.99); }
+  .form-card:hover { border-color: var(--accent); }
+  .form-card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; }
+  .form-card-title { font-family: var(--font-display); font-size: 15px; font-weight: 600; flex: 1; margin-right: 10px; }
+  .badge {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 3px 8px;
+    border-radius: 20px;
+    white-space: nowrap;
+  }
+  .badge-active { background: rgba(34,197,94,0.15); color: var(--green); border: 1px solid rgba(34,197,94,0.3); }
+  .badge-draft { background: rgba(245,158,11,0.15); color: var(--amber); border: 1px solid rgba(245,158,11,0.3); }
+  .form-card-meta { display: flex; gap: 16px; font-size: 12px; color: var(--text2); }
+  .form-card-meta span { display: flex; align-items: center; gap: 5px; }
+  .form-card-actions { display: flex; gap: 8px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--border); }
+
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 10px 18px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    border: none;
+    transition: all 0.2s;
+    font-family: var(--font-body);
+    white-space: nowrap;
+  }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-primary:hover { background: var(--accent2); }
+  .btn-secondary { background: var(--surface2); color: var(--text2); border: 1px solid var(--border); }
+  .btn-secondary:hover { background: var(--surface3); color: var(--text); }
+  .btn-danger { background: rgba(239,68,68,0.15); color: var(--red); border: 1px solid rgba(239,68,68,0.3); }
+  .btn-sm { padding: 7px 13px; font-size: 13px; }
+  .btn-full { width: 100%; }
+  .btn-ghost { background: none; color: var(--accent2); padding: 10px; }
+
+  .fab {
+    position: fixed;
+    bottom: 82px;
+    right: 20px;
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: var(--accent);
+    color: white;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: 0 8px 24px rgba(61,142,240,0.4);
+    transition: transform 0.2s, box-shadow 0.2s;
+    z-index: 50;
+    font-size: 24px;
+  }
+  .fab:active { transform: scale(0.94); box-shadow: 0 4px 12px rgba(61,142,240,0.3); }
+
+  /* MODAL */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 200;
+    backdrop-filter: blur(4px);
+    align-items: flex-end;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border-radius: 20px 20px 0 0;
+    padding: 24px 20px;
+    width: 100%;
+    max-width: 480px;
+    margin: 0 auto;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: slideUp 0.3s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+  .modal-handle {
+    width: 40px; height: 4px;
+    background: var(--text3);
+    border-radius: 2px;
+    margin: 0 auto 20px;
+  }
+  .modal-title {
+    font-family: var(--font-display);
+    font-size: 20px;
+    font-weight: 700;
+    margin-bottom: 20px;
+  }
+
+  /* FORM BUILDER */
+  .form-group { margin-bottom: 18px; }
+  .form-label { font-size: 13px; color: var(--text2); font-weight: 500; margin-bottom: 7px; display: block; }
+  .form-input {
+    width: 100%;
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    color: var(--text);
+    font-size: 15px;
+    font-family: var(--font-body);
+    outline: none;
+    transition: border-color 0.2s;
+  }
+  .form-input:focus { border-color: var(--accent); }
+  .form-input::placeholder { color: var(--text3); }
+  select.form-input { cursor: pointer; }
+  textarea.form-input { min-height: 80px; resize: vertical; }
+
+  .field-item {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .field-icon { font-size: 18px; width: 28px; text-align: center; }
+  .field-info { flex: 1; }
+  .field-name { font-size: 14px; font-weight: 500; }
+  .field-type { font-size: 11px; color: var(--text2); margin-top: 2px; }
+  .field-delete { background: none; border: none; color: var(--text3); cursor: pointer; padding: 4px; font-size: 18px; }
+  .field-delete:hover { color: var(--red); }
+
+  .field-type-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+  .field-type-btn {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 12px 8px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: var(--font-body);
+    color: var(--text2);
+  }
+  .field-type-btn:hover, .field-type-btn.selected {
+    border-color: var(--accent);
+    background: rgba(61,142,240,0.1);
+    color: var(--text);
+  }
+  .field-type-icon { font-size: 22px; display: block; margin-bottom: 6px; }
+  .field-type-label { font-size: 11px; font-weight: 500; }
+
+  /* FILL FORM */
+  .form-progress {
+    background: var(--surface2);
+    border-radius: 3px;
+    height: 4px;
+    margin-bottom: 24px;
+    overflow: hidden;
+  }
+  .form-progress-bar {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 3px;
+    transition: width 0.3s;
+  }
+  .question-num { font-size: 12px; color: var(--text2); margin-bottom: 6px; }
+  .question-text { font-family: var(--font-display); font-size: 18px; font-weight: 600; margin-bottom: 20px; line-height: 1.4; }
+
+  .option-btn {
+    width: 100%;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 14px 16px;
+    text-align: left;
+    color: var(--text);
+    font-size: 15px;
+    cursor: pointer;
+    margin-bottom: 10px;
+    transition: all 0.2s;
+    font-family: var(--font-body);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .option-btn.selected {
+    border-color: var(--accent);
+    background: rgba(61,142,240,0.1);
+    color: var(--accent2);
+  }
+  .option-radio {
+    width: 18px; height: 18px;
+    border-radius: 50%;
+    border: 2px solid var(--text3);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+  }
+  .option-btn.selected .option-radio {
+    border-color: var(--accent);
+    background: var(--accent);
+  }
+  .option-btn.selected .option-radio::after {
+    content: '';
+    width: 6px; height: 6px;
+    border-radius: 50%;
+    background: white;
+  }
+
+  .nav-buttons { display: flex; gap: 12px; margin-top: 24px; }
+
+  /* RESPONSES PAGE */
+  .response-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+  .response-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 12px; }
+  .response-title { font-weight: 600; font-size: 15px; }
+  .response-date { font-size: 11px; color: var(--text3); }
+  .response-answer { margin-bottom: 10px; padding-bottom: 10px; border-bottom: 1px solid var(--border); }
+  .response-answer:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 0; }
+  .response-q { font-size: 12px; color: var(--text2); margin-bottom: 3px; }
+  .response-a { font-size: 14px; color: var(--text); }
+
+  .sync-banner {
+    background: rgba(245,158,11,0.1);
+    border: 1px solid rgba(245,158,11,0.3);
+    border-radius: var(--radius-sm);
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+    font-size: 13px;
+    color: var(--amber);
+  }
+
+  /* SETTINGS PAGE */
+  .settings-section { margin-bottom: 28px; }
+  .settings-section-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text3); font-weight: 600; margin-bottom: 12px; }
+  .setting-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    margin-bottom: 8px;
+    cursor: pointer;
+  }
+  .setting-icon { font-size: 20px; width: 32px; text-align: center; }
+  .setting-text { flex: 1; }
+  .setting-name { font-size: 15px; font-weight: 500; }
+  .setting-desc { font-size: 12px; color: var(--text2); margin-top: 2px; }
+  .setting-arrow { color: var(--text3); font-size: 18px; }
+
+  /* TOGGLE */
+  .toggle {
+    width: 44px; height: 26px;
+    background: var(--surface3);
+    border-radius: 13px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.2s;
+    border: none;
+    flex-shrink: 0;
+  }
+  .toggle.on { background: var(--accent); }
+  .toggle::after {
+    content: '';
+    position: absolute;
+    top: 3px; left: 3px;
+    width: 20px; height: 20px;
+    border-radius: 50%;
+    background: white;
+    transition: left 0.2s;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+  }
+  .toggle.on::after { left: 21px; }
+
+  /* EMPTY STATE */
+  .empty-state {
+    text-align: center;
+    padding: 60px 20px;
+    color: var(--text2);
+  }
+  .empty-icon { font-size: 56px; margin-bottom: 16px; opacity: 0.6; }
+  .empty-title { font-family: var(--font-display); font-size: 18px; font-weight: 600; color: var(--text); margin-bottom: 8px; }
+  .empty-desc { font-size: 14px; line-height: 1.6; }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 90px;
+    left: 50%;
+    transform: translateX(-50%) translateY(20px);
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    opacity: 0;
+    transition: all 0.3s;
+    z-index: 300;
+    white-space: nowrap;
+    pointer-events: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+  .toast.success { border-color: rgba(34,197,94,0.4); color: var(--green); }
+  .toast.error { border-color: rgba(239,68,68,0.4); color: var(--red); }
+
+  /* INSTALL BANNER */
+  .install-banner {
+    background: linear-gradient(135deg, #1a3a6b 0%, #0f2444 100%);
+    border: 1px solid rgba(91,163,255,0.3);
+    border-radius: var(--radius);
+    padding: 16px;
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    transition: border-color 0.2s;
+  }
+  .install-banner:hover { border-color: var(--accent2); }
+  .install-banner-icon { font-size: 32px; flex-shrink: 0; }
+  .install-banner-text { flex: 1; }
+  .install-banner-title { font-family: var(--font-display); font-size: 15px; font-weight: 600; margin-bottom: 3px; }
+  .install-banner-sub { font-size: 12px; color: var(--text2); line-height: 1.4; }
+  .install-banner-btn { background: var(--accent); color: white; border: none; border-radius: 8px; padding: 8px 14px; font-size: 13px; font-weight: 600; cursor: pointer; white-space: nowrap; font-family: var(--font-body); }
+
+  /* PHOTO PREVIEW */
+  .photo-preview {
+    width: 100%;
+    max-height: 220px;
+    object-fit: cover;
+    border-radius: var(--radius-sm);
+    margin-bottom: 12px;
+    border: 1px solid var(--border);
+  }
+  .photo-zone {
+    background: var(--surface2);
+    border: 2px dashed var(--border);
+    border-radius: 12px;
+    padding: 32px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    margin-bottom: 12px;
+  }
+  .photo-zone:hover { border-color: var(--accent); }
+  .photo-zone-icon { font-size: 40px; margin-bottom: 10px; }
+  .photo-zone-text { font-size: 14px; color: var(--text2); }
+  .photo-zone-sub { font-size: 12px; color: var(--text3); margin-top: 4px; }
+
+  /* XLSFORM IMPORT */
+  .import-zone {
+    background: var(--surface2);
+    border: 2px dashed rgba(61,142,240,0.4);
+    border-radius: 12px;
+    padding: 28px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 16px;
+  }
+  .import-zone:hover, .import-zone.drag-over {
+    border-color: var(--accent);
+    background: rgba(61,142,240,0.07);
+  }
+  .import-zone-icon { font-size: 36px; margin-bottom: 10px; }
+  .import-zone-text { font-size: 15px; font-weight: 500; margin-bottom: 4px; }
+  .import-zone-sub { font-size: 12px; color: var(--text2); }
+
+  /* CSV EXPORT */
+  .export-row { display: flex; gap: 10px; margin-top: 16px; }
+
+  /* PROGRESS RING */
+  .sync-progress {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(34,197,94,0.08);
+    border: 1px solid rgba(34,197,94,0.2);
+    border-radius: var(--radius-sm);
+    padding: 12px 14px;
+    margin-bottom: 14px;
+    font-size: 13px;
+    color: var(--green);
+  }
+
+  /* MAP MINI */
+  .gps-map-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 12px;
+    color: var(--accent2);
+    text-decoration: none;
+    margin-top: 6px;
+    padding: 4px 10px;
+    background: rgba(61,142,240,0.1);
+    border-radius: 20px;
+    border: 1px solid rgba(61,142,240,0.2);
+  }
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 2px; }
+
+  .divider { height: 1px; background: var(--border); margin: 20px 0; }
+  .text-muted { color: var(--text2); font-size: 13px; }
+  .mt-4 { margin-top: 16px; }
+  .gap-8 { gap: 8px; }
+</style>
+</head>
+<body>
+
+<!-- HEADER -->
+<div class="header">
+  <div class="header-logo">
+    <div class="logo-icon">📋</div>
+    <div class="logo-text">Kol<span>ecta</span></div>
+  </div>
+  <div class="header-status" id="statusBar">
+    <div class="status-dot" id="statusDot"></div>
+    <span id="statusText">En ligne</span>
+  </div>
+</div>
+
+<!-- PAGES -->
+
+<!-- HOME -->
+<div class="page active" id="page-home">
+  <div id="install-banner-home" style="display:none">
+    <div class="install-banner" onclick="installPWA()">
+      <div class="install-banner-icon">📲</div>
+      <div class="install-banner-text">
+        <div class="install-banner-title">Installer Kolecta</div>
+        <div class="install-banner-sub">Accès hors ligne complet · Fonctionne sur iPhone & Android</div>
+      </div>
+      <button class="install-banner-btn">Installer</button>
+    </div>
+  </div>
+  <div class="welcome-card">
+    <div class="welcome-title">Bonjour 👋</div>
+    <div class="welcome-sub">Collectez vos données terrain même sans connexion. Elles se synchronisent automatiquement.</div>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="stat-num" id="stat-forms">0</div>
+      <div class="stat-label">Formulaires</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="stat-responses">0</div>
+      <div class="stat-label">Réponses</div>
+    </div>
+    <div class="stat-card">
+      <div class="stat-num" id="stat-pending">0</div>
+      <div class="stat-label">En attente</div>
+    </div>
+  </div>
+
+  <div class="section-title">
+    Activité récente
+    <span class="see-all" onclick="showPage('responses')">Voir tout</span>
+  </div>
+  <div id="recent-activity">
+    <div class="empty-state">
+      <div class="empty-icon">🌱</div>
+      <div class="empty-title">Démarrez votre première collecte</div>
+      <div class="empty-desc">Créez un formulaire et commencez à collecter des données sur le terrain.</div>
+    </div>
+  </div>
+</div>
+
+<!-- FORMS -->
+<div class="page" id="page-forms">
+  <div class="search-bar">
+    <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#4A5F8A" stroke-width="2">
+      <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+    </svg>
+    <input type="text" placeholder="Rechercher un formulaire..." id="searchInput" oninput="filterForms()">
+  </div>
+  <div style="display:flex;gap:10px;margin-bottom:18px;">
+    <button class="btn btn-secondary btn-sm" style="flex:1" onclick="openImportModal()">📥 Importer XLSForm</button>
+    <button class="btn btn-secondary btn-sm" style="flex:1" onclick="exportCSV()">📊 Export CSV</button>
+  </div>
+  <div id="forms-list"></div>
+</div>
+
+<!-- RESPONSES -->
+<div class="page" id="page-responses">
+  <div id="pending-banner"></div>
+  <div id="responses-list"></div>
+</div>
+
+<!-- SETTINGS -->
+<div class="page" id="page-settings">
+  <!-- KOBO CONNECTION STATUS -->
+  <div id="kobo-status-card" style="display:none;background:rgba(34,197,94,0.08);border:1px solid rgba(34,197,94,0.25);border-radius:var(--radius);padding:14px 16px;margin-bottom:20px;display:none;">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <div style="width:8px;height:8px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;flex-shrink:0;"></div>
+      <div style="flex:1;">
+        <div style="font-size:13px;font-weight:600;color:var(--green);">Connecté à KoboToolbox</div>
+        <div style="font-size:11px;color:var(--text2);margin-top:2px;" id="kobo-status-detail">—</div>
+      </div>
+      <button class="btn btn-sm btn-secondary" onclick="koboSync()" id="kobo-sync-btn">🔄 Sync</button>
+    </div>
+  </div>
+
+  <div class="settings-section">
+    <div class="settings-section-title">Compte</div>
+    <div class="setting-item" onclick="openProfileModal()">
+      <div class="setting-icon">👤</div>
+      <div class="setting-text">
+        <div class="setting-name">Profil</div>
+        <div class="setting-desc" id="profile-desc">Votre nom et organisation</div>
+      </div>
+      <div class="setting-arrow">›</div>
+    </div>
+    <div class="setting-item" onclick="openKoboModal()">
+      <div class="setting-icon">🔗</div>
+      <div class="setting-text">
+        <div class="setting-name">Serveur KoboToolbox</div>
+        <div class="setting-desc" id="kobo-desc">Configurer la synchronisation</div>
+      </div>
+      <div class="setting-arrow">›</div>
+    </div>
+  </div>
+  <div class="settings-section">
+    <div class="settings-section-title">Données</div>
+    <div class="setting-item" style="cursor:default;">
+      <div class="setting-icon">📴</div>
+      <div class="setting-text">
+        <div class="setting-name">Mode hors ligne</div>
+        <div class="setting-desc">Toujours actif</div>
+      </div>
+      <button class="toggle on" onclick="this.classList.toggle('on')"></button>
+    </div>
+    <div class="setting-item" style="cursor:default;">
+      <div class="setting-icon">🔄</div>
+      <div class="setting-text">
+        <div class="setting-name">Sync automatique</div>
+        <div class="setting-desc">Dès que la connexion revient</div>
+      </div>
+      <button class="toggle on" onclick="this.classList.toggle('on')"></button>
+    </div>
+    <div class="setting-item" onclick="exportData()">
+      <div class="setting-icon">📤</div>
+      <div class="setting-text">
+        <div class="setting-name" data-i18n="export_data">Exporter les données</div>
+        <div class="setting-desc" data-i18n="export_desc">Télécharger en JSON/CSV</div>
+      </div>
+      <div class="setting-arrow">›</div>
+    </div>
+  </div>
+  <div class="settings-section">
+    <div class="settings-section-title" data-i18n="section_app">Application</div>
+    <div class="setting-item" onclick="openLangModal()">
+      <div class="setting-icon">🌐</div>
+      <div class="setting-text">
+        <div class="setting-name" data-i18n="language">Langue</div>
+        <div class="setting-desc" id="lang-desc">Français</div>
+      </div>
+      <div class="setting-arrow">›</div>
+    </div>
+    <div class="setting-item" onclick="clearAllData()">
+      <div class="setting-icon">🗑️</div>
+      <div class="setting-text">
+        <div class="setting-name" style="color:var(--red)" data-i18n="clear_data">Effacer toutes les données</div>
+        <div class="setting-desc" data-i18n="clear_desc">Réinitialiser l'application</div>
+      </div>
+      <div class="setting-arrow">›</div>
+    </div>
+  </div>
+  <div style="text-align:center;padding:20px 0;color:var(--text3);font-size:12px;line-height:1.8;">
+    Kolecta v1.0.0 — PWA hors ligne<br>Compatible iOS & Android<br>
+    <span style="color:var(--text2);font-weight:500;">Développé par Aziz Kadiri Dine</span>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <button class="nav-item active" onclick="showPage('home')" id="nav-home">
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/>
+    </svg>
+    Accueil
+  </button>
+  <button class="nav-item" onclick="showPage('forms')" id="nav-forms">
+    <div class="nav-icon-wrap">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <rect x="3" y="3" width="18" height="18" rx="2"/><line x1="8" y1="8" x2="16" y2="8"/><line x1="8" y1="12" x2="16" y2="12"/><line x1="8" y1="16" x2="12" y2="16"/>
+      </svg>
+      <span class="nav-badge" id="forms-badge" style="display:none">0</span>
+    </div>
+    Formulaires
+  </button>
+  <button class="nav-item" onclick="showPage('responses')" id="nav-responses">
+    <div class="nav-icon-wrap">
+      <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/>
+      </svg>
+      <span class="nav-badge" id="responses-badge" style="display:none">0</span>
+    </div>
+    Réponses
+  </button>
+  <button class="nav-item" onclick="showPage('settings')" id="nav-settings">
+    <svg fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+    </svg>
+    Paramètres
+  </button>
+</nav>
+
+<!-- FAB -->
+<button class="fab" id="fab" onclick="openCreateModal()" title="Créer un formulaire">＋</button>
+
+<!-- MODAL: CRÉER FORMULAIRE -->
+<div class="modal-overlay" id="createModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Nouveau formulaire</div>
+    <div class="form-group">
+      <label class="form-label">Nom du formulaire *</label>
+      <input type="text" class="form-input" id="formTitle" placeholder="ex: Enquête ménage 2025">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Description</label>
+      <textarea class="form-input" id="formDesc" placeholder="Décrivez l'objectif de ce formulaire..." rows="3"></textarea>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Champs du formulaire</label>
+      <div id="fields-list"></div>
+      <button class="btn btn-secondary btn-full mt-4" onclick="openAddFieldModal()">
+        ＋ Ajouter un champ
+      </button>
+    </div>
+    <div class="nav-buttons">
+      <button class="btn btn-secondary" style="flex:1" onclick="closeModal('createModal')">Annuler</button>
+      <button class="btn btn-primary" style="flex:2" onclick="saveForm()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: AJOUTER CHAMP -->
+<div class="modal-overlay" id="addFieldModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Type de champ</div>
+    <div class="field-type-grid">
+      <div class="field-type-btn" onclick="selectFieldType('text')" id="ft-text">
+        <span class="field-type-icon">Aa</span>
+        <span class="field-type-label">Texte</span>
+      </div>
+      <div class="field-type-btn" onclick="selectFieldType('number')" id="ft-number">
+        <span class="field-type-icon">🔢</span>
+        <span class="field-type-label">Nombre</span>
+      </div>
+      <div class="field-type-btn" onclick="selectFieldType('choice')" id="ft-choice">
+        <span class="field-type-icon">☑️</span>
+        <span class="field-type-label">Choix</span>
+      </div>
+      <div class="field-type-btn" onclick="selectFieldType('date')" id="ft-date">
+        <span class="field-type-icon">📅</span>
+        <span class="field-type-label">Date</span>
+      </div>
+      <div class="field-type-btn" onclick="selectFieldType('location')" id="ft-location">
+        <span class="field-type-icon">📍</span>
+        <span class="field-type-label">GPS</span>
+      </div>
+      <div class="field-type-btn" onclick="selectFieldType('photo')" id="ft-photo">
+        <span class="field-type-icon">📷</span>
+        <span class="field-type-label">Photo</span>
+      </div>
+    </div>
+    <div class="form-group">
+      <label class="form-label">Question / Libellé *</label>
+      <input type="text" class="form-input" id="fieldLabel" placeholder="ex: Quel est votre nom ?">
+    </div>
+    <div id="choices-section" style="display:none">
+      <label class="form-label">Options (une par ligne)</label>
+      <textarea class="form-input" id="fieldChoices" placeholder="Option A&#10;Option B&#10;Option C" rows="4"></textarea>
+    </div>
+    <div class="nav-buttons">
+      <button class="btn btn-secondary" style="flex:1" onclick="closeModal('addFieldModal')">Retour</button>
+      <button class="btn btn-primary" style="flex:2" onclick="addField()">Ajouter</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: IMPORT XLSFORM -->
+<div class="modal-overlay" id="importModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">📥 Importer un formulaire</div>
+    <p style="font-size:13px;color:var(--text2);margin-bottom:16px;line-height:1.6;">
+      Importez un formulaire depuis KoboToolbox en format <strong style="color:var(--accent2)">XLSForm (.xlsx)</strong> ou collez directement du JSON.
+    </p>
+
+    <div class="import-zone" id="import-dropzone" onclick="document.getElementById('xlsfile').click()"
+      ondragover="event.preventDefault();this.classList.add('drag-over')"
+      ondragleave="this.classList.remove('drag-over')"
+      ondrop="handleXLSDrop(event)">
+      <div class="import-zone-icon">📄</div>
+      <div class="import-zone-text">Glissez votre fichier XLSForm ici</div>
+      <div class="import-zone-sub">ou cliquez pour parcourir · .xlsx, .xls</div>
+    </div>
+    <input type="file" id="xlsfile" accept=".xlsx,.xls" style="display:none" onchange="handleXLSFile(this.files[0])">
+
+    <div style="text-align:center;color:var(--text3);font-size:12px;margin:10px 0 14px;">— ou —</div>
+
+    <div class="form-group">
+      <label class="form-label">Coller du JSON (format KoboToolbox)</label>
+      <textarea class="form-input" id="jsonImport" placeholder='{"title":"Mon formulaire","fields":[...]}' rows="5" style="font-family:monospace;font-size:12px;"></textarea>
+    </div>
+
+    <div id="import-preview" style="display:none;background:var(--surface2);border-radius:10px;padding:14px;margin-bottom:16px;border:1px solid rgba(34,197,94,0.3);">
+      <div style="color:var(--green);font-size:13px;font-weight:600;margin-bottom:8px;">✅ Formulaire détecté</div>
+      <div id="import-preview-content" style="font-size:13px;color:var(--text2);"></div>
+    </div>
+
+    <div class="nav-buttons">
+      <button class="btn btn-secondary" style="flex:1" onclick="closeModal('importModal')">Annuler</button>
+      <button class="btn btn-primary" style="flex:2" onclick="confirmImport()">Importer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: REMPLIR FORMULAIRE -->
+<div class="modal-overlay" id="fillModal">
+  <div class="modal" style="border-radius:20px 20px 0 0; max-height:95vh;">
+    <div class="modal-handle"></div>
+    <div id="fill-form-content"></div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ============================================================
+// STATE & STORAGE
+// ============================================================
+let forms = JSON.parse(localStorage.getItem('fs_forms') || '[]');
+let responses = JSON.parse(localStorage.getItem('fs_responses') || '[]');
+let currentFields = [];
+let selectedFieldType = 'text';
+let fillState = { formId: null, currentQ: 0, answers: {} };
+let isOnline = navigator.onLine;
+
+function saveToStorage() {
+  localStorage.setItem('fs_forms', JSON.stringify(forms));
+  localStorage.setItem('fs_responses', JSON.stringify(responses));
+}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function showPage(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.getElementById('nav-' + page).classList.add('active');
+
+  const fab = document.getElementById('fab');
+  fab.style.display = page === 'forms' ? 'flex' : 'none';
+
+  if (page === 'home') renderHome();
+  if (page === 'forms') renderForms();
+  if (page === 'responses') renderResponses();
+  updateBadges();
+}
+
+// ============================================================
+// ONLINE/OFFLINE
+// ============================================================
+function updateConnectionStatus() {
+  isOnline = navigator.onLine;
+  const dot = document.getElementById('statusDot');
+  const text = document.getElementById('statusText');
+  dot.className = 'status-dot' + (isOnline ? '' : ' offline');
+  text.textContent = isOnline ? 'En ligne' : 'Hors ligne';
+  if (isOnline) { syncPending(); }
+}
+window.addEventListener('online', updateConnectionStatus);
+window.addEventListener('offline', updateConnectionStatus);
+updateConnectionStatus();
+
+function syncPending() {
+  const pending = responses.filter(r => r.status === 'pending');
+  if (pending.length > 0) {
+    pending.forEach(r => r.status = 'synced');
+    saveToStorage();
+    showToast('✅ ' + pending.length + ' réponse(s) synchronisée(s)', 'success');
+    updateBadges();
+  }
+}
+
+// ============================================================
+// BADGES & STATS
+// ============================================================
+function updateBadges() {
+  const formsBadge = document.getElementById('forms-badge');
+  const responsesBadge = document.getElementById('responses-badge');
+  const pendingCount = responses.filter(r => r.status === 'pending').length;
+
+  if (forms.length > 0) {
+    formsBadge.textContent = forms.length;
+    formsBadge.style.display = 'block';
+  } else { formsBadge.style.display = 'none'; }
+
+  if (pendingCount > 0) {
+    responsesBadge.textContent = pendingCount;
+    responsesBadge.style.display = 'block';
+  } else { responsesBadge.style.display = 'none'; }
+
+  document.getElementById('stat-forms').textContent = forms.length;
+  document.getElementById('stat-responses').textContent = responses.length;
+  document.getElementById('stat-pending').textContent = pendingCount;
+}
+
+// ============================================================
+// HOME
+// ============================================================
+function renderHome() {
+  updateBadges();
+  const container = document.getElementById('recent-activity');
+  const recent = responses.slice(-5).reverse();
+  if (recent.length === 0) {
+    container.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">🌱</div>
+      <div class="empty-title">Aucune activité</div>
+      <div class="empty-desc">Créez un formulaire et commencez à collecter des données terrain.</div>
+    </div>`;
+    return;
+  }
+  container.innerHTML = recent.map(r => {
+    const form = forms.find(f => f.id === r.formId);
+    const syncIcon = r.status === 'synced' ? '🟢' : '🟡';
+    const syncLabel = r.status === 'synced' ? 'Synchronisé' : 'En attente';
+    return `<div class="activity-item">
+      <div class="activity-icon ${r.status === 'synced' ? 'green' : 'amber'}">📝</div>
+      <div class="activity-text">
+        <div class="activity-name">${form ? form.title : 'Formulaire supprimé'}</div>
+        <div class="activity-meta">${syncIcon} ${syncLabel}</div>
+      </div>
+      <div class="activity-time">${formatDate(r.createdAt)}</div>
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// FORMS LIST
+// ============================================================
+function renderForms(filter = '') {
+  const container = document.getElementById('forms-list');
+  const filtered = forms.filter(f => f.title.toLowerCase().includes(filter.toLowerCase()));
+  if (filtered.length === 0) {
+    container.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">📋</div>
+      <div class="empty-title">${filter ? 'Aucun résultat' : 'Aucun formulaire'}</div>
+      <div class="empty-desc">${filter ? 'Essayez un autre mot-clé.' : 'Appuyez sur + pour créer votre premier formulaire.'}</div>
+    </div>`;
+    return;
+  }
+  container.innerHTML = filtered.map(f => {
+    const formResponses = responses.filter(r => r.formId === f.id).length;
+    return `<div class="form-card">
+      <div class="form-card-header">
+        <div class="form-card-title">${f.title}</div>
+        <span class="badge badge-active">Actif</span>
+      </div>
+      <div class="form-card-meta">
+        <span>📊 ${f.fields.length} champ${f.fields.length > 1 ? 's' : ''}</span>
+        <span>📝 ${formResponses} réponse${formResponses > 1 ? 's' : ''}</span>
+        <span>📅 ${formatDate(f.createdAt)}</span>
+      </div>
+      ${f.description ? `<div class="text-muted" style="margin-top:8px;font-size:13px;">${f.description}</div>` : ''}
+      <div class="form-card-actions">
+        <button class="btn btn-primary btn-sm" style="flex:2" onclick="openFillModal('${f.id}')">▶ Remplir</button>
+        <button class="btn btn-secondary btn-sm" style="flex:1" onclick="deleteForm('${f.id}')">🗑️</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function filterForms() {
+  renderForms(document.getElementById('searchInput').value);
+}
+
+// ============================================================
+// CREATE FORM
+// ============================================================
+function openCreateModal() {
+  currentFields = [];
+  document.getElementById('formTitle').value = '';
+  document.getElementById('formDesc').value = '';
+  renderFieldsList();
+  document.getElementById('createModal').classList.add('open');
+}
+
+function openAddFieldModal() {
+  selectedFieldType = 'text';
+  document.getElementById('fieldLabel').value = '';
+  document.getElementById('fieldChoices').value = '';
+  document.querySelectorAll('.field-type-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('ft-text').classList.add('selected');
+  document.getElementById('choices-section').style.display = 'none';
+  document.getElementById('addFieldModal').classList.add('open');
+}
+
+function selectFieldType(type) {
+  selectedFieldType = type;
+  document.querySelectorAll('.field-type-btn').forEach(b => b.classList.remove('selected'));
+  document.getElementById('ft-' + type).classList.add('selected');
+  document.getElementById('choices-section').style.display = type === 'choice' ? 'block' : 'none';
+}
+
+function addField() {
+  const label = document.getElementById('fieldLabel').value.trim();
+  if (!label) { showToast('⚠️ Entrez un libellé', 'error'); return; }
+  const field = { id: Date.now().toString(), type: selectedFieldType, label };
+  if (selectedFieldType === 'choice') {
+    const choices = document.getElementById('fieldChoices').value.trim().split('\n').filter(c => c.trim());
+    if (choices.length < 2) { showToast('⚠️ Ajoutez au moins 2 options', 'error'); return; }
+    field.choices = choices;
+  }
+  currentFields.push(field);
+  closeModal('addFieldModal');
+  renderFieldsList();
+}
+
+function renderFieldsList() {
+  const container = document.getElementById('fields-list');
+  const icons = { text: 'Aa', number: '🔢', choice: '☑️', date: '📅', location: '📍', photo: '📷' };
+  const labels = { text: 'Texte libre', number: 'Nombre', choice: 'Choix multiple', date: 'Date', location: 'GPS', photo: 'Photo' };
+  if (currentFields.length === 0) {
+    container.innerHTML = '<div class="text-muted" style="text-align:center;padding:16px;">Aucun champ ajouté</div>';
+    return;
+  }
+  container.innerHTML = currentFields.map(f => `
+    <div class="field-item">
+      <div class="field-icon">${icons[f.type] || '?'}</div>
+      <div class="field-info">
+        <div class="field-name">${f.label}</div>
+        <div class="field-type">${labels[f.type] || f.type}${f.choices ? ' · ' + f.choices.length + ' options' : ''}</div>
+      </div>
+      <button class="field-delete" onclick="removeField('${f.id}')">✕</button>
+    </div>
+  `).join('');
+}
+
+function removeField(id) {
+  currentFields = currentFields.filter(f => f.id !== id);
+  renderFieldsList();
+}
+
+function saveForm() {
+  const title = document.getElementById('formTitle').value.trim();
+  if (!title) { showToast('⚠️ Donnez un nom au formulaire', 'error'); return; }
+  if (currentFields.length === 0) { showToast('⚠️ Ajoutez au moins un champ', 'error'); return; }
+  const form = {
+    id: Date.now().toString(),
+    title,
+    description: document.getElementById('formDesc').value.trim(),
+    fields: currentFields,
+    createdAt: new Date().toISOString()
+  };
+  forms.push(form);
+  saveToStorage();
+  closeModal('createModal');
+  renderForms();
+  updateBadges();
+  showToast('✅ Formulaire créé', 'success');
+}
+
+// ============================================================
+// FILL FORM
+// ============================================================
+function openFillModal(formId) {
+  const form = forms.find(f => f.id === formId);
+  if (!form) return;
+  fillState = { formId, currentQ: 0, answers: {}, form };
+  renderFillQuestion();
+  document.getElementById('fillModal').classList.add('open');
+}
+
+function renderFillQuestion() {
+  const { form, currentQ, answers } = fillState;
+  const field = form.fields[currentQ];
+  const total = form.fields.length;
+  const progress = ((currentQ) / total) * 100;
+
+  let inputHtml = '';
+  const icons = { text: 'Aa', number: '🔢', choice: '☑️', date: '📅', location: '📍', photo: '📷' };
+
+  if (field.type === 'text') {
+    inputHtml = `<input type="text" class="form-input" id="fill-input" placeholder="Votre réponse..." value="${answers[field.id] || ''}" style="font-size:16px;padding:16px;">`;
+  } else if (field.type === 'number') {
+    inputHtml = `<input type="number" class="form-input" id="fill-input" placeholder="0" value="${answers[field.id] || ''}" style="font-size:24px;padding:16px;text-align:center;">`;
+  } else if (field.type === 'date') {
+    inputHtml = `<input type="date" class="form-input" id="fill-input" value="${answers[field.id] || ''}" style="font-size:16px;padding:16px;">`;
+  } else if (field.type === 'choice') {
+    inputHtml = field.choices.map(c => `
+      <button class="option-btn ${answers[field.id] === c ? 'selected' : ''}" onclick="selectChoice('${field.id}', '${c.replace(/'/g, "\\'")}', this)">
+        <div class="option-radio"></div>
+        ${c}
+      </button>
+    `).join('');
+  } else if (field.type === 'location') {
+    const savedLoc = fillState.answers[field.id];
+    const mapUrl = savedLoc ? `https://maps.google.com/?q=${savedLoc}` : '#';
+    inputHtml = `
+      <div style="text-align:center;padding:10px 0;">
+        ${savedLoc ? `
+          <div style="background:var(--surface2);border-radius:10px;padding:16px;margin-bottom:16px;border:1px solid rgba(34,197,94,0.3);">
+            <div style="font-size:12px;color:var(--text2);margin-bottom:6px;">Position capturée</div>
+            <div style="font-family:monospace;font-size:14px;color:var(--green);">📍 ${savedLoc}</div>
+            <a href="${mapUrl}" target="_blank" class="gps-map-link" style="margin-top:10px;display:inline-flex;">🗺️ Voir sur la carte</a>
+          </div>
+        ` : ''}
+        <button class="btn btn-primary" onclick="captureGPS('${field.id}')" id="gps-btn-${field.id}">
+          📍 ${savedLoc ? 'Mettre à jour la position' : 'Capturer ma position GPS'}
+        </button>
+        <div style="font-size:12px;color:var(--text3);margin-top:8px;">Précision GPS selon votre appareil</div>
+      </div>
+    `;
+  } else if (field.type === 'photo') {
+    const savedPhoto = fillState.answers[field.id];
+    inputHtml = `
+      <div style="text-align:center;">
+        ${savedPhoto ? `<img src="${savedPhoto}" class="photo-preview" alt="Photo capturée">` : ''}
+        <div class="photo-zone" onclick="document.getElementById('photo-input-${field.id}').click()">
+          <div class="photo-zone-icon">${savedPhoto ? '🔄' : '📷'}</div>
+          <div class="photo-zone-text">${savedPhoto ? 'Changer la photo' : 'Prendre une photo'}</div>
+          <div class="photo-zone-sub">Appareil photo ou galerie</div>
+        </div>
+        <input type="file" id="photo-input-${field.id}" accept="image/*" capture="environment" style="display:none"
+          onchange="capturePhoto('${field.id}', this)">
+        ${savedPhoto ? `<button class="btn btn-danger btn-sm" onclick="fillState.answers['${field.id}']=null;renderFillQuestion()">🗑️ Supprimer</button>` : ''}
+      </div>
+    `;
+  }
+
+  const isLast = currentQ === total - 1;
+
+  document.getElementById('fill-form-content').innerHTML = `
+    <div style="margin-bottom:8px;display:flex;justify-content:space-between;align-items:center;">
+      <span style="font-family:var(--font-display);font-size:17px;font-weight:700;">${form.title}</span>
+      <span style="font-size:13px;color:var(--text2);">${currentQ + 1}/${total}</span>
+    </div>
+    <div class="form-progress"><div class="form-progress-bar" style="width:${progress}%"></div></div>
+    <div class="question-num">${icons[field.type] || '❓'} Question ${currentQ + 1}</div>
+    <div class="question-text">${field.label}</div>
+    <div id="fill-options">${inputHtml}</div>
+    <div class="nav-buttons">
+      ${currentQ > 0 ? `<button class="btn btn-secondary" style="flex:1" onclick="prevQuestion()">← Précédent</button>` : `<button class="btn btn-secondary" style="flex:1" onclick="closeModal('fillModal')">Annuler</button>`}
+      <button class="btn btn-primary" style="flex:2" onclick="${isLast ? 'submitForm()' : 'nextQuestion()'}">
+        ${isLast ? '✓ Soumettre' : 'Suivant →'}
+      </button>
+    </div>
+  `;
+}
+
+function selectChoice(fieldId, value, el) {
+  document.querySelectorAll('.option-btn').forEach(b => b.classList.remove('selected'));
+  el.classList.add('selected');
+  fillState.answers[fieldId] = value;
+}
+
+function nextQuestion() {
+  saveCurrentAnswer();
+  if (fillState.currentQ < fillState.form.fields.length - 1) {
+    fillState.currentQ++;
+    renderFillQuestion();
+  }
+}
+
+function prevQuestion() {
+  saveCurrentAnswer();
+  if (fillState.currentQ > 0) {
+    fillState.currentQ--;
+    renderFillQuestion();
+  }
+}
+
+function saveCurrentAnswer() {
+  const field = fillState.form.fields[fillState.currentQ];
+  const input = document.getElementById('fill-input');
+  if (input) fillState.answers[field.id] = input.value;
+}
+
+function captureGPS(fieldId) {
+  if (!navigator.geolocation) { showToast('⚠️ GPS non disponible', 'error'); return; }
+  showToast('📍 Localisation en cours...', '');
+  navigator.geolocation.getCurrentPosition(pos => {
+    const loc = pos.coords.latitude.toFixed(6) + ', ' + pos.coords.longitude.toFixed(6);
+    fillState.answers[fieldId] = loc;
+    renderFillQuestion();
+    showToast('✅ Position capturée', 'success');
+  }, () => { showToast('⚠️ Impossible de localiser', 'error'); });
+}
+
+function submitForm() {
+  saveCurrentAnswer();
+  const response = {
+    id: Date.now().toString(),
+    formId: fillState.formId,
+    answers: fillState.answers,
+    status: isOnline ? 'synced' : 'pending',
+    createdAt: new Date().toISOString()
+  };
+  responses.push(response);
+  saveToStorage();
+  closeModal('fillModal');
+  updateBadges();
+  const msg = isOnline ? '✅ Réponse envoyée !' : '💾 Réponse sauvegardée hors ligne';
+  showToast(msg, 'success');
+  renderHome();
+}
+
+// ============================================================
+// RESPONSES
+// ============================================================
+function renderResponses() {
+  const container = document.getElementById('responses-list');
+  const bannerContainer = document.getElementById('pending-banner');
+  const pending = responses.filter(r => r.status === 'pending');
+
+  bannerContainer.innerHTML = pending.length > 0 ? `
+    <div class="sync-banner">
+      🔄 ${pending.length} réponse(s) en attente de synchronisation
+      <button class="btn btn-sm" style="background:rgba(245,158,11,0.2);color:var(--amber);margin-left:auto;" onclick="syncPending()">Sync</button>
+    </div>
+  ` : '';
+
+  if (responses.length === 0) {
+    container.innerHTML = `<div class="empty-state">
+      <div class="empty-icon">📊</div>
+      <div class="empty-title">Aucune réponse</div>
+      <div class="empty-desc">Les données collectées apparaîtront ici.</div>
+    </div>`;
+    return;
+  }
+
+  container.innerHTML = [...responses].reverse().map(r => {
+    const form = forms.find(f => f.id === r.formId);
+    const syncBadge = r.status === 'synced' ?
+      '<span class="badge badge-active">Synchronisé</span>' :
+      '<span class="badge badge-draft">En attente</span>';
+    const answersHtml = form ? form.fields.map(f => {
+      const ans = r.answers[f.id];
+      return `<div class="response-answer">
+        <div class="response-q">${f.label}</div>
+        <div class="response-a">${ans || '<em style="color:var(--text3)">Non renseigné</em>'}</div>
+      </div>`;
+    }).join('') : '';
+
+    return `<div class="response-card">
+      <div class="response-header">
+        <div>
+          <div class="response-title">${form ? form.title : 'Formulaire supprimé'}</div>
+          <div class="response-date">${new Date(r.createdAt).toLocaleString('fr-FR')}</div>
+        </div>
+        ${syncBadge}
+      </div>
+      ${answersHtml}
+    </div>`;
+  }).join('');
+}
+
+// ============================================================
+// SETTINGS ACTIONS
+// ============================================================
+function exportData() {
+  const data = { forms, responses, exportedAt: new Date().toISOString() };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'kolecta-export-' + Date.now() + '.json';
+  a.click();
+  showToast('📤 Export téléchargé', 'success');
+}
+
+function clearAllData() {
+  document.getElementById('clearConfirmModal').classList.add('open');
+}
+
+function confirmClearData() {
+  forms = []; responses = [];
+  saveToStorage();
+  updateBadges();
+  renderHome();
+  renderForms();
+  renderResponses();
+  closeModal('clearConfirmModal');
+  showToast('🗑️ Toutes les données ont été effacées', '');
+}
+
+function deleteForm(id) {
+  if (confirm('Supprimer ce formulaire ?')) {
+    forms = forms.filter(f => f.id !== id);
+    saveToStorage();
+    renderForms();
+    updateBadges();
+    showToast('🗑️ Formulaire supprimé', '');
+  }
+}
+
+// ============================================================
+// PWA INSTALL
+// ============================================================
+let deferredInstallPrompt = null;
+
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredInstallPrompt = e;
+  document.getElementById('install-banner-home').style.display = 'block';
+});
+
+window.addEventListener('appinstalled', () => {
+  document.getElementById('install-banner-home').style.display = 'none';
+  showToast('✅ Kolecta installé !', 'success');
+});
+
+function installPWA() {
+  if (deferredInstallPrompt) {
+    deferredInstallPrompt.prompt();
+    deferredInstallPrompt.userChoice.then(result => {
+      if (result.outcome === 'accepted') showToast('✅ Installation en cours...', 'success');
+      deferredInstallPrompt = null;
+    });
+  } else {
+    showToast('📱 iOS : Partager → Ajouter à l\'écran d\'accueil', '');
+  }
+}
+
+function injectManifest() {
+  const manifest = {
+    name: 'Kolecta — Collecte Terrain',
+    short_name: 'Kolecta',
+    description: 'Collecte de données terrain hors ligne',
+    start_url: './',
+    display: 'standalone',
+    background_color: '#0A1628',
+    theme_color: '#0A1628',
+    orientation: 'portrait',
+    icons: [
+      { src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='40' fill='%233D8EF0'/%3E%3Ctext y='140' x='32' font-size='130'%3E%F0%9F%93%8B%3C/text%3E%3C/svg%3E", sizes: '192x192', type: 'image/svg+xml' }
+    ]
+  };
+  const blob = new Blob([JSON.stringify(manifest)], { type: 'application/manifest+json' });
+  document.getElementById('pwa-manifest').href = URL.createObjectURL(blob);
+}
+injectManifest();
+
+if ('serviceWorker' in navigator) {
+  const sw = `const C='fs-v2';self.addEventListener('install',e=>{self.skipWaiting();});self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(k=>Promise.all(k.filter(n=>n!==C).map(n=>caches.delete(n)))));self.clients.claim();});self.addEventListener('fetch',e=>{e.respondWith(fetch(e.request).catch(()=>caches.match(e.request)||new Response('',{status:503})));});`;
+  const swBlob = new Blob([sw], { type: 'application/javascript' });
+  navigator.serviceWorker.register(URL.createObjectURL(swBlob)).catch(()=>{});
+}
+
+// ============================================================
+// PHOTO CAPTURE
+// ============================================================
+function capturePhoto(fieldId, input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement('canvas');
+      const MAX = 1200;
+      let w = img.width, h = img.height;
+      if (w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+      if (h > MAX) { w = Math.round(w * MAX / h); h = MAX; }
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      fillState.answers[fieldId] = canvas.toDataURL('image/jpeg', 0.75);
+      renderFillQuestion();
+      showToast('📷 Photo ajoutée', 'success');
+    };
+    img.src = e.target.result;
+  };
+  reader.readAsDataURL(file);
+}
+
+// ============================================================
+// XLSFORM IMPORT
+// ============================================================
+let importedForm = null;
+
+function openImportModal() {
+  importedForm = null;
+  document.getElementById('jsonImport').value = '';
+  document.getElementById('import-preview').style.display = 'none';
+  document.getElementById('importModal').classList.add('open');
+}
+
+function handleXLSDrop(e) {
+  e.preventDefault();
+  document.getElementById('import-dropzone').classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) handleXLSFile(file);
+}
+
+function handleXLSFile(file) {
+  if (!file) return;
+  if (!window.XLSX) { showToast('⚠️ Bibliothèque XLS non chargée', 'error'); return; }
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const wb = XLSX.read(e.target.result, { type: 'array' });
+      const surveySheet = wb.Sheets['survey'] || wb.Sheets[wb.SheetNames[0]];
+      const choicesSheet = wb.Sheets['choices'] || null;
+      const survey = XLSX.utils.sheet_to_json(surveySheet, { defval: '' });
+      const choices = choicesSheet ? XLSX.utils.sheet_to_json(choicesSheet, { defval: '' }) : [];
+
+      const choicesMap = {};
+      choices.forEach(row => {
+        const listName = row['list_name'] || row['list name'] || '';
+        const label = row['label'] || row['label::French (fr)'] || row['label:French'] || Object.values(row)[2] || '';
+        if (listName && label) {
+          if (!choicesMap[listName]) choicesMap[listName] = [];
+          choicesMap[listName].push(String(label));
+        }
+      });
+
+      const typeMap = { text:'text', integer:'number', decimal:'number', date:'date', geopoint:'location', image:'photo', select_one:'choice', select_multiple:'choice', note:'text' };
+      const fields = [];
+      let title = file.name.replace(/\.(xlsx|xls)$/i, '');
+
+      survey.forEach(row => {
+        const rawType = String(row['type'] || '').trim();
+        const label = String(row['label'] || row['label::French (fr)'] || row['label:French'] || row['name'] || '').trim();
+        if (!rawType || ['begin_group','end_group','begin_repeat','end_repeat'].includes(rawType)) return;
+        if (!label) return;
+        let fsType = 'text', listName = null;
+        if (rawType.startsWith('select_one') || rawType.startsWith('select_multiple')) {
+          fsType = 'choice'; listName = rawType.split(' ')[1];
+        } else { fsType = typeMap[rawType] || 'text'; }
+        const field = { id: 'xl_' + Date.now() + '_' + Math.random().toString(36).substr(2,5), type: fsType, label };
+        if (fsType === 'choice') field.choices = (listName && choicesMap[listName]) ? choicesMap[listName] : ['Option A','Option B','Option C'];
+        fields.push(field);
+      });
+
+      if (fields.length === 0) { showToast('⚠️ Aucun champ trouvé', 'error'); return; }
+      importedForm = { title, fields };
+      showImportPreview(importedForm);
+    } catch (err) { showToast('⚠️ Fichier XLS invalide', 'error'); }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function showImportPreview(form) {
+  const typeLabels = { text:'Texte', number:'Nombre', choice:'Choix', date:'Date', location:'GPS', photo:'Photo' };
+  document.getElementById('import-preview-content').innerHTML = `
+    <div style="font-weight:600;color:var(--text);margin-bottom:6px;">${form.title}</div>
+    <div style="color:var(--text2);">${form.fields.length} champ(s) détecté(s)</div>
+    <div style="margin-top:10px;display:flex;flex-wrap:wrap;gap:6px;">
+      ${form.fields.slice(0,8).map(f=>`<span style="background:var(--surface3);padding:3px 8px;border-radius:20px;font-size:11px;">${typeLabels[f.type]}: ${f.label.substring(0,22)}${f.label.length>22?'…':''}</span>`).join('')}
+      ${form.fields.length>8?`<span style="color:var(--text3);font-size:11px;padding:3px 8px;">+${form.fields.length-8} autres</span>`:''}
+    </div>`;
+  document.getElementById('import-preview').style.display = 'block';
+}
+
+function confirmImport() {
+  if (!importedForm) {
+    const raw = document.getElementById('jsonImport').value.trim();
+    if (!raw) { showToast('⚠️ Aucun formulaire à importer', 'error'); return; }
+    try {
+      const parsed = JSON.parse(raw);
+      if (!parsed.title || !parsed.fields) throw new Error();
+      importedForm = { title: parsed.title, description: parsed.description || '', fields: parsed.fields };
+    } catch { showToast('⚠️ JSON invalide', 'error'); return; }
+  }
+  const form = { id: 'imp_' + Date.now(), title: importedForm.title, description: importedForm.description || 'Importé via XLSForm', fields: importedForm.fields, createdAt: new Date().toISOString(), imported: true };
+  forms.push(form);
+  saveToStorage();
+  closeModal('importModal');
+  renderForms();
+  updateBadges();
+  importedForm = null;
+  showToast('✅ Formulaire importé : ' + form.title, 'success');
+}
+
+// ============================================================
+// CSV EXPORT
+// ============================================================
+function exportCSV() {
+  if (responses.length === 0) { showToast('⚠️ Aucune réponse à exporter', 'error'); return; }
+  const header = ['ID', 'Formulaire', 'Date', 'Statut'];
+  const fieldCols = {};
+  responses.forEach(r => {
+    const form = forms.find(f => f.id === r.formId);
+    if (!form) return;
+    form.fields.forEach(f => { if (!fieldCols[f.id]) { fieldCols[f.id] = f.label; header.push(f.label); } });
+  });
+  const rows = responses.map(r => {
+    const form = forms.find(f => f.id === r.formId);
+    const row = [r.id, form ? form.title : 'Supprimé', new Date(r.createdAt).toLocaleString('fr-FR'), r.status === 'synced' ? 'Synchronisé' : 'En attente'];
+    Object.keys(fieldCols).forEach(fid => {
+      const v = r.answers[fid] || '';
+      row.push(typeof v === 'string' && v.startsWith('data:image') ? '[Photo]' : v);
+    });
+    return row;
+  });
+  const esc = v => `"${String(v).replace(/"/g,'""')}"`;
+  const csv = '\uFEFF' + [header, ...rows].map(r => r.map(esc).join(',')).join('\n');
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+  a.download = 'kolecta-' + new Date().toISOString().slice(0,10) + '.csv';
+  a.click();
+  showToast('📊 CSV exporté — ' + responses.length + ' réponses', 'success');
+}
+
+// ============================================================
+// UTILITIES
+// ============================================================
+function closeModal(id) {
+  document.getElementById(id).classList.remove('open');
+}
+
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) overlay.classList.remove('open');
+  });
+});
+
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'toast show' + (type ? ' ' + type : '');
+  setTimeout(() => { t.className = 'toast'; }, 3000);
+}
+
+function formatDate(iso) {
+  if (!iso) return '';
+  const d = new Date(iso);
+  const now = new Date();
+  const diff = now - d;
+  if (diff < 60000) return 'À l\'instant';
+  if (diff < 3600000) return Math.floor(diff / 60000) + 'min';
+  if (diff < 86400000) return Math.floor(diff / 3600000) + 'h';
+  return d.toLocaleDateString('fr-FR');
+}
+
+// ============================================================
+// INIT
+// ============================================================
+// Formulaires de démonstration
+if (forms.length === 0) {
+  forms = [
+    {
+      id: 'demo1',
+      title: 'Enquête ménage',
+      description: 'Formulaire de collecte socio-économique',
+      fields: [
+        { id: 'f1', type: 'text', label: 'Nom du chef de ménage' },
+        { id: 'f2', type: 'number', label: 'Nombre de personnes dans le ménage' },
+        { id: 'f3', type: 'choice', label: 'Type de logement', choices: ['Maison en dur', 'Maison en banco', 'Appartement', 'Autre'] },
+        { id: 'f4', type: 'location', label: 'Localisation GPS du ménage' },
+        { id: 'f5', type: 'date', label: 'Date de l\'enquête' }
+      ],
+      createdAt: new Date(Date.now() - 86400000).toISOString()
+    },
+    {
+      id: 'demo2',
+      title: 'Santé communautaire',
+      description: 'Suivi vaccinal et état de santé',
+      fields: [
+        { id: 'g1', type: 'text', label: 'Prénom de l\'enfant' },
+        { id: 'g2', type: 'number', label: 'Âge (en mois)' },
+        { id: 'g3', type: 'choice', label: 'Carnet de vaccination à jour ?', choices: ['Oui, complet', 'Incomplet', 'Absent'] },
+        { id: 'g4', type: 'choice', label: 'Signes de malnutrition ?', choices: ['Aucun', 'Modérée', 'Sévère'] }
+      ],
+      createdAt: new Date(Date.now() - 43200000).toISOString()
+    }
+  ];
+  saveToStorage();
+}
+
+// ============================================================
+// PHASE 3 — PROFIL, KOBO SYNC, LANGUE
+// ============================================================
+
+let profile = JSON.parse(localStorage.getItem('fs_profile') || '{}');
+let koboConfig = JSON.parse(localStorage.getItem('fs_kobo') || '{}');
+let currentLang = localStorage.getItem('fs_lang') || 'fr';
+
+// ---- i18n ----
+const i18n = {
+  fr: {
+    home: 'Accueil', forms: 'Formulaires', responses: 'Réponses', settings: 'Paramètres',
+    welcome_title: 'Bonjour 👋', welcome_sub: 'Collectez vos données terrain même sans connexion. Elles se synchronisent automatiquement.',
+    stat_forms: 'Formulaires', stat_responses: 'Réponses', stat_pending: 'En attente',
+    recent: 'Activité récente', see_all: 'Voir tout', no_activity: 'Aucune activité',
+    no_activity_desc: 'Créez un formulaire et commencez à collecter des données terrain.',
+    fill: '▶ Remplir', search_placeholder: 'Rechercher un formulaire...',
+    import_xls: '📥 Importer XLSForm', export_csv: '📊 Export CSV',
+    online: 'En ligne', offline: 'Hors ligne',
+    export_data: 'Exporter les données', export_desc: 'Télécharger en JSON/CSV',
+    language: 'Langue', clear_data: 'Effacer toutes les données', clear_desc: 'Réinitialiser l\'application',
+    section_app: 'Application', synced: 'Synchronisé', pending: 'En attente',
+    no_response: 'Aucune réponse', no_response_desc: 'Les données collectées apparaîtront ici.',
+    submit: '✓ Soumettre', next: 'Suivant →', prev: '← Précédent', cancel: 'Annuler'
+  },
+  en: {
+    home: 'Home', forms: 'Forms', responses: 'Responses', settings: 'Settings',
+    welcome_title: 'Hello 👋', welcome_sub: 'Collect field data even without internet. It syncs automatically when you reconnect.',
+    stat_forms: 'Forms', stat_responses: 'Responses', stat_pending: 'Pending',
+    recent: 'Recent activity', see_all: 'See all', no_activity: 'No activity yet',
+    no_activity_desc: 'Create a form and start collecting field data.',
+    fill: '▶ Fill', search_placeholder: 'Search forms...',
+    import_xls: '📥 Import XLSForm', export_csv: '📊 Export CSV',
+    online: 'Online', offline: 'Offline',
+    export_data: 'Export data', export_desc: 'Download as JSON/CSV',
+    language: 'Language', clear_data: 'Clear all data', clear_desc: 'Reset the application',
+    section_app: 'Application', synced: 'Synced', pending: 'Pending',
+    no_response: 'No responses', no_response_desc: 'Collected data will appear here.',
+    submit: '✓ Submit', next: 'Next →', prev: '← Back', cancel: 'Cancel'
+  },
+  ar: {
+    home: 'الرئيسية', forms: 'النماذج', responses: 'الردود', settings: 'الإعدادات',
+    welcome_title: 'مرحباً 👋', welcome_sub: 'جمع البيانات الميدانية حتى بدون اتصال. تتزامن تلقائياً عند العودة.',
+    stat_forms: 'نماذج', stat_responses: 'ردود', stat_pending: 'في الانتظار',
+    recent: 'النشاط الأخير', see_all: 'عرض الكل', no_activity: 'لا نشاط بعد',
+    no_activity_desc: 'أنشئ نموذجاً وابدأ جمع البيانات.',
+    fill: '▶ ملء', search_placeholder: 'البحث في النماذج...',
+    import_xls: '📥 استيراد XLSForm', export_csv: '📊 تصدير CSV',
+    online: 'متصل', offline: 'غير متصل',
+    export_data: 'تصدير البيانات', export_desc: 'تنزيل JSON/CSV',
+    language: 'اللغة', clear_data: 'مسح كل البيانات', clear_desc: 'إعادة تعيين التطبيق',
+    section_app: 'التطبيق', synced: 'متزامن', pending: 'في الانتظار',
+    no_response: 'لا ردود', no_response_desc: 'ستظهر البيانات المجمعة هنا.',
+    submit: '✓ إرسال', next: 'التالي →', prev: '← السابق', cancel: 'إلغاء'
+  }
+};
+
+function t(key) { return (i18n[currentLang] || i18n.fr)[key] || i18n.fr[key] || key; }
+
+function applyLang() {
+  const isRTL = currentLang === 'ar';
+  document.documentElement.dir = isRTL ? 'rtl' : 'ltr';
+  document.documentElement.lang = currentLang;
+  // Nav labels
+  const navLabels = ['home','forms','responses','settings'];
+  navLabels.forEach(k => {
+    const el = document.getElementById('nav-' + k);
+    if (el) { const span = el.querySelector('span') || el.lastChild; if (span && span.nodeType === 3) el.lastChild.textContent = ' ' + t(k); }
+  });
+  // Status
+  const statusText = document.getElementById('statusText');
+  if (statusText) statusText.textContent = isOnline ? t('online') : t('offline');
+  // Search placeholder
+  const si = document.getElementById('searchInput');
+  if (si) si.placeholder = t('search_placeholder');
+  // Import/export buttons
+  const ib = document.querySelector('[onclick="openImportModal()"]');
+  const eb = document.querySelector('[onclick="exportCSV()"]');
+  if (ib) ib.textContent = t('import_xls');
+  if (eb) eb.textContent = t('export_csv');
+  // Lang desc in settings
+  const ld = document.getElementById('lang-desc');
+  if (ld) { const names = {fr:'Français', en:'English', ar:'العربية'}; ld.textContent = names[currentLang] || 'Français'; }
+  // data-i18n elements
+  document.querySelectorAll('[data-i18n]').forEach(el => { el.textContent = t(el.dataset.i18n); });
+  // Welcome card
+  const wt = document.querySelector('.welcome-title');
+  const ws = document.querySelector('.welcome-sub');
+  if (wt) wt.textContent = t('welcome_title');
+  if (ws) ws.textContent = t('welcome_sub');
+}
+
+function setLang(lang, el) {
+  currentLang = lang;
+  localStorage.setItem('fs_lang', lang);
+  document.querySelectorAll('#lang-options .option-btn').forEach(b => b.classList.remove('selected'));
+  if (el) el.classList.add('selected');
+  applyLang();
+  setTimeout(() => closeModal('langModal'), 400);
+  showToast('✅ ' + (lang === 'fr' ? 'Langue mise à jour' : lang === 'en' ? 'Language updated' : 'تم تحديث اللغة'), 'success');
+}
+
+function openLangModal() {
+  // Mark current language
+  const opts = document.querySelectorAll('#lang-options .option-btn');
+  const langs = ['fr','en','ar'];
+  opts.forEach((btn, i) => { btn.classList.toggle('selected', langs[i] === currentLang); });
+  document.getElementById('langModal').classList.add('open');
+}
+
+// ---- PROFIL ----
+function openProfileModal() {
+  document.getElementById('profile-name').value = profile.name || '';
+  document.getElementById('profile-org').value = profile.org || '';
+  document.getElementById('profile-role').value = profile.role || '';
+  document.getElementById('profile-email').value = profile.email || '';
+  document.getElementById('profileModal').classList.add('open');
+}
+
+function saveProfile() {
+  profile = {
+    name: document.getElementById('profile-name').value.trim(),
+    org: document.getElementById('profile-org').value.trim(),
+    role: document.getElementById('profile-role').value.trim(),
+    email: document.getElementById('profile-email').value.trim()
+  };
+  localStorage.setItem('fs_profile', JSON.stringify(profile));
+  updateProfileUI();
+  closeModal('profileModal');
+  showToast('✅ Profil enregistré', 'success');
+}
+
+function updateProfileUI() {
+  const desc = document.getElementById('profile-desc');
+  if (!desc) return;
+  if (profile.name) {
+    desc.textContent = profile.name + (profile.org ? ' · ' + profile.org : '');
+  } else {
+    desc.textContent = 'Votre nom et organisation';
+  }
+  // Update welcome card greeting
+  const wt = document.querySelector('.welcome-title');
+  if (wt && profile.name) {
+    const firstName = profile.name.split(' ')[0];
+    wt.textContent = 'Bonjour, ' + firstName + ' 👋';
+  }
+}
+
+// ---- KOBO TOOLBOX ----
+function openKoboModal() {
+  document.getElementById('kobo-server').value = koboConfig.server || 'https://kf.kobotoolbox.org';
+  document.getElementById('kobo-token').value = koboConfig.token || '';
+  document.getElementById('kobo-test-result').style.display = 'none';
+  updateKoboServerUrl();
+  document.getElementById('koboModal').classList.add('open');
+}
+
+function updateKoboServerUrl() {
+  const sel = document.getElementById('kobo-server').value;
+  document.getElementById('kobo-custom-url-group').style.display = sel === 'custom' ? 'block' : 'none';
+}
+
+function toggleTokenVis() {
+  const inp = document.getElementById('kobo-token');
+  const eye = document.getElementById('token-eye');
+  inp.type = inp.type === 'password' ? 'text' : 'password';
+  eye.textContent = inp.type === 'password' ? '👁️' : '🙈';
+}
+
+function getKoboBaseUrl() {
+  const sel = document.getElementById('kobo-server').value;
+  if (sel === 'custom') return document.getElementById('kobo-custom-url').value.trim().replace(/\/$/, '');
+  return sel;
+}
+
+async function testKoboConnection() {
+  const token = document.getElementById('kobo-token').value.trim();
+  const base = getKoboBaseUrl();
+  if (!token) { showKoboResult('⚠️ Entrez votre token API', false); return; }
+  const btn = document.getElementById('kobo-test-btn');
+  btn.textContent = '⏳ Test...'; btn.disabled = true;
+
+  try {
+    // Use a CORS proxy for browser-based requests
+    const url = base + '/api/v2/assets/?format=json&limit=1';
+    const res = await fetch(url, {
+      headers: { 'Authorization': 'Token ' + token }
+    });
+    if (res.ok) {
+      const data = await res.json();
+      const count = data.count || 0;
+      showKoboResult(`✅ Connexion réussie ! ${count} formulaire(s) trouvé(s) sur ce compte.`, true);
+    } else if (res.status === 401) {
+      showKoboResult('❌ Token invalide. Vérifiez votre clé API KoboToolbox.', false);
+    } else {
+      showKoboResult(`⚠️ Erreur serveur (${res.status}). Vérifiez l\'URL.`, false);
+    }
+  } catch (e) {
+    // CORS expected in browser — give helpful instructions
+    showKoboResult('ℹ️ Test CORS bloqué par le navigateur — normal en mode PWA. Cliquez "Connecter" pour sauvegarder et tester depuis l\'app installée.', true);
+  }
+  btn.textContent = '🔍 Tester'; btn.disabled = false;
+}
+
+function showKoboResult(msg, success) {
+  const el = document.getElementById('kobo-test-result');
+  el.textContent = msg;
+  el.style.display = 'block';
+  el.style.background = success ? 'rgba(34,197,94,0.08)' : 'rgba(239,68,68,0.08)';
+  el.style.border = '1px solid ' + (success ? 'rgba(34,197,94,0.3)' : 'rgba(239,68,68,0.3)');
+  el.style.color = success ? 'var(--green)' : 'var(--red)';
+}
+
+function saveKoboConfig() {
+  const token = document.getElementById('kobo-token').value.trim();
+  const base = getKoboBaseUrl();
+  if (!token) { showKoboResult('⚠️ Entrez votre token API', false); return; }
+  koboConfig = { server: base, token, savedAt: new Date().toISOString() };
+  localStorage.setItem('fs_kobo', JSON.stringify(koboConfig));
+  updateKoboUI();
+  closeModal('koboModal');
+  showToast('✅ Serveur KoboToolbox configuré', 'success');
+}
+
+function updateKoboUI() {
+  const desc = document.getElementById('kobo-desc');
+  const card = document.getElementById('kobo-status-card');
+  const detail = document.getElementById('kobo-status-detail');
+  if (koboConfig.token) {
+    if (desc) desc.textContent = '✅ ' + (koboConfig.server || 'KoboToolbox');
+    if (card) card.style.display = 'block';
+    if (detail) detail.textContent = koboConfig.server + ' · Connecté';
+  } else {
+    if (desc) desc.textContent = 'Configurer la synchronisation';
+    if (card) card.style.display = 'none';
+  }
+}
+
+async function koboSync() {
+  if (!koboConfig.token) { showToast('⚠️ Configurez d\'abord le serveur KoboToolbox', 'error'); return; }
+  const btn = document.getElementById('kobo-sync-btn');
+  btn.textContent = '⏳'; btn.disabled = true;
+
+  try {
+    const url = koboConfig.server + '/api/v2/assets/?format=json&limit=50';
+    const res = await fetch(url, { headers: { 'Authorization': 'Token ' + koboConfig.token } });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const data = await res.json();
+    const remoteAssets = data.results || [];
+    let imported = 0;
+    for (const asset of remoteAssets) {
+      if (asset.asset_type !== 'survey') continue;
+      const exists = forms.find(f => f.koboUid === asset.uid);
+      if (!exists) {
+        // Fetch full form details
+        const detailRes = await fetch(koboConfig.server + '/api/v2/assets/' + asset.uid + '/?format=json', {
+          headers: { 'Authorization': 'Token ' + koboConfig.token }
+        });
+        if (!detailRes.ok) continue;
+        const detail = await detailRes.json();
+        const fields = parseKoboSurvey(detail.content);
+        if (fields.length > 0) {
+          forms.push({
+            id: 'kobo_' + asset.uid,
+            koboUid: asset.uid,
+            title: asset.name || 'Formulaire KoboToolbox',
+            description: 'Synchronisé depuis KoboToolbox',
+            fields,
+            createdAt: asset.date_created || new Date().toISOString(),
+            fromKobo: true
+          });
+          imported++;
+        }
+      }
+    }
+
+    // Push pending responses to Kobo
+    let pushed = 0;
+    const pending = responses.filter(r => r.status === 'pending' && r.formId.startsWith('kobo_'));
+    for (const resp of pending) {
+      const form = forms.find(f => f.id === resp.formId);
+      if (!form || !form.koboUid) continue;
+      const submission = buildKoboSubmission(form, resp);
+      try {
+        const subRes = await fetch(koboConfig.server + '/api/v2/assets/' + form.koboUid + '/submissions/', {
+          method: 'POST',
+          headers: { 'Authorization': 'Token ' + koboConfig.token, 'Content-Type': 'application/json' },
+          body: JSON.stringify(submission)
+        });
+        if (subRes.ok) { resp.status = 'synced'; resp.syncedAt = new Date().toISOString(); pushed++; }
+      } catch {}
+    }
+
+    saveToStorage();
+    if (imported > 0) renderForms();
+    updateBadges();
+    let msg = '✅ Sync terminée';
+    if (imported > 0) msg += ` · ${imported} formulaire(s) importé(s)`;
+    if (pushed > 0) msg += ` · ${pushed} réponse(s) envoyée(s)`;
+    showToast(msg, 'success');
+    document.getElementById('kobo-status-detail').textContent = koboConfig.server + ' · Dernière sync: ' + new Date().toLocaleTimeString('fr-FR');
+  } catch (e) {
+    showToast('⚠️ Sync échouée: ' + (e.message || 'Vérifiez la connexion'), 'error');
+  }
+  btn.textContent = '🔄 Sync'; btn.disabled = false;
+}
+
+function parseKoboSurvey(content) {
+  if (!content || !content.survey) return [];
+  const typeMap = { text:'text', integer:'number', decimal:'number', date:'date', geopoint:'location', image:'photo', select_one:'choice', select_multiple:'choice', note:'text', acknowledge:'choice' };
+  const fields = [];
+  const choicesMap = {};
+  if (content.choices) {
+    content.choices.forEach(c => {
+      const list = c.list_name || c['list name'] || '';
+      const lbl = (c.label && (Array.isArray(c.label) ? c.label[0] : c.label)) || c.name || '';
+      if (list) { if (!choicesMap[list]) choicesMap[list] = []; choicesMap[list].push(String(lbl)); }
+    });
+  }
+  content.survey.forEach(row => {
+    const rawType = String(row.type || '').trim();
+    if (!rawType || rawType.startsWith('begin') || rawType.startsWith('end')) return;
+    const label = Array.isArray(row.label) ? row.label[0] : (row.label || row.name || '');
+    if (!label) return;
+    let fsType = 'text', listName = null;
+    if (rawType.startsWith('select_one') || rawType.startsWith('select_multiple')) {
+      fsType = 'choice'; listName = rawType.split(' ')[1];
+    } else { fsType = typeMap[rawType] || 'text'; }
+    const field = { id: 'kf_' + (row.name || Date.now()), type: fsType, label: String(label), koboName: row.name };
+    if (fsType === 'choice') field.choices = (listName && choicesMap[listName]) ? choicesMap[listName] : ['Oui','Non'];
+    fields.push(field);
+  });
+  return fields;
+}
+
+function buildKoboSubmission(form, resp) {
+  const data = { start: resp.createdAt, end: new Date().toISOString(), '__version__': '1' };
+  form.fields.forEach(f => {
+    if (f.koboName && resp.answers[f.id] !== undefined) {
+      let val = resp.answers[f.id];
+      if (typeof val === 'string' && val.startsWith('data:image')) val = '[photo_base64]';
+      data[f.koboName] = val;
+    }
+  });
+  return data;
+}
+
+// Auto-sync when coming back online
+window.addEventListener('online', () => {
+  updateConnectionStatus();
+  if (koboConfig.token) {
+    setTimeout(() => koboSync(), 2000);
+  }
+});
+
+// ---- INIT PHASE 3 ----
+updateProfileUI();
+updateKoboUI();
+applyLang();
+
+showPage('home');
+</script>
+<!-- MODAL: PROFIL -->
+<div class="modal-overlay" id="profileModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">👤 Mon profil</div>
+    <div class="form-group">
+      <label class="form-label">Prénom & Nom</label>
+      <input type="text" class="form-input" id="profile-name" placeholder="ex: Amara Diallo">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Organisation / ONG</label>
+      <input type="text" class="form-input" id="profile-org" placeholder="ex: UNICEF, MSF, Université de Dakar...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Rôle / Poste</label>
+      <input type="text" class="form-input" id="profile-role" placeholder="ex: Agent de terrain, Chercheur...">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Email</label>
+      <input type="email" class="form-input" id="profile-email" placeholder="vous@organisation.org">
+    </div>
+    <div class="nav-buttons">
+      <button class="btn btn-secondary" style="flex:1" onclick="closeModal('profileModal')">Annuler</button>
+      <button class="btn btn-primary" style="flex:2" onclick="saveProfile()">Enregistrer</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: KOBO SERVER -->
+<div class="modal-overlay" id="koboModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🔗 Serveur KoboToolbox</div>
+    <p style="font-size:13px;color:var(--text2);line-height:1.6;margin-bottom:18px;">
+      Connectez Kolecta à votre compte KoboToolbox pour synchroniser vos formulaires et réponses.
+    </p>
+
+    <div class="form-group">
+      <label class="form-label">Serveur</label>
+      <select class="form-input" id="kobo-server" onchange="updateKoboServerUrl()">
+        <option value="https://kf.kobotoolbox.org">KoboToolbox (Global) — kf.kobotoolbox.org</option>
+        <option value="https://kobo.humanitarianresponse.info">OCHA Humanitarian — kobo.humanitarianresponse.info</option>
+        <option value="custom">Serveur personnalisé...</option>
+      </select>
+    </div>
+    <div class="form-group" id="kobo-custom-url-group" style="display:none;">
+      <label class="form-label">URL personnalisée</label>
+      <input type="url" class="form-input" id="kobo-custom-url" placeholder="https://mon-kobo.org">
+    </div>
+    <div class="form-group">
+      <label class="form-label">Token API</label>
+      <div style="position:relative;">
+        <input type="password" class="form-input" id="kobo-token" placeholder="Votre token API KoboToolbox" style="padding-right:44px;">
+        <button onclick="toggleTokenVis()" style="position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text2);cursor:pointer;font-size:16px;" id="token-eye">👁️</button>
+      </div>
+      <div style="font-size:11px;color:var(--text3);margin-top:6px;">
+        Compte KoboToolbox → Paramètres → Sécurité → Clé API
+      </div>
+    </div>
+
+    <div id="kobo-test-result" style="display:none;border-radius:var(--radius-sm);padding:12px 14px;margin-bottom:16px;font-size:13px;"></div>
+
+    <div class="nav-buttons">
+      <button class="btn btn-secondary" style="flex:1" onclick="closeModal('koboModal')">Annuler</button>
+      <button class="btn btn-secondary" style="flex:1" onclick="testKoboConnection()" id="kobo-test-btn">🔍 Tester</button>
+      <button class="btn btn-primary" style="flex:2" onclick="saveKoboConfig()">Connecter</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: LANGUE -->
+<div class="modal-overlay" id="langModal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🌐 Langue / Language</div>
+    <div id="lang-options">
+      <div class="option-btn" onclick="setLang('fr', this)" style="margin-bottom:10px;">
+        <div class="option-radio"></div>
+        <div>
+          <div style="font-weight:500;">🇫🇷 Français</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:2px;">Interface en français</div>
+        </div>
+      </div>
+      <div class="option-btn" onclick="setLang('en', this)" style="margin-bottom:10px;">
+        <div class="option-radio"></div>
+        <div>
+          <div style="font-weight:500;">🇬🇧 English</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:2px;">Interface in English</div>
+        </div>
+      </div>
+      <div class="option-btn" onclick="setLang('ar', this)">
+        <div class="option-radio"></div>
+        <div>
+          <div style="font-weight:500;">🇸🇦 العربية</div>
+          <div style="font-size:12px;color:var(--text2);margin-top:2px;">واجهة عربية</div>
+        </div>
+      </div>
+    </div>
+    <div class="nav-buttons" style="margin-top:20px;">
+      <button class="btn btn-secondary btn-full" onclick="closeModal('langModal')">Fermer / Close</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: CONFIRMATION EFFACER -->
+<div class="modal-overlay" id="clearConfirmModal">
+  <div class="modal" style="text-align:center;">
+    <div class="modal-handle"></div>
+    <div style="font-size:52px;margin-bottom:16px;">⚠️</div>
+    <div class="modal-title" style="text-align:center;color:var(--red);">Effacer toutes les données ?</div>
+    <p style="font-size:14px;color:var(--text2);line-height:1.6;margin-bottom:8px;">
+      Cette action supprimera <strong style="color:var(--text);">définitivement</strong> tous vos formulaires et toutes vos réponses collectées.
+    </p>
+    <p style="font-size:13px;color:var(--red);margin-bottom:24px;padding:12px;background:rgba(239,68,68,0.08);border-radius:var(--radius-sm);border:1px solid rgba(239,68,68,0.2);">
+      ❌ Cette action est irréversible et ne peut pas être annulée.
+    </p>
+    <div class="nav-buttons">
+      <button class="btn btn-secondary" style="flex:1" onclick="closeModal('clearConfirmModal')">
+        Annuler
+      </button>
+      <button class="btn btn-danger" style="flex:1;background:var(--red);color:white;border:none;" onclick="confirmClearData()">
+        🗑️ Tout effacer
+      </button>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
